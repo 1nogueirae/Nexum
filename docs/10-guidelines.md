@@ -16,7 +16,7 @@ Paleta neutra com um único tom de destaque, evitando a aparência "colorida dem
 | Papel | Cor | Uso |
 |---|---|---|
 | Primária | `#2F6F5E` (verde-petróleo) | Botões de ação primária, ícones ativos, saldo devedor > 0. |
-| Primária (variante escura) | `#1F4E42` | Estado pressionado, app bar. |
+| Primária (variante escura) | `#1F4E42` | Estado pressionado, cabeçalho de navegação. |
 | Neutro — fundo | `#F7F7F5` | Fundo padrão das telas (modo claro). |
 | Neutro — superfície | `#FFFFFF` | Cards, formulários. |
 | Neutro — texto principal | `#1C1C1C` | Textos primários. |
@@ -29,35 +29,36 @@ Paleta neutra com um único tom de destaque, evitando a aparência "colorida dem
 
 ## Tipografia
 
-- Fonte: **Inter** (ou a fonte padrão do sistema, `Roboto`, como fallback) — ambas têm excelente legibilidade em números, o que é central para este app.
+- Fonte: **Inter** quando carregada por recurso compatível com Expo, com a fonte padrão do sistema como fallback. Ambas devem preservar excelente legibilidade de números.
+- No React Native, tamanhos são definidos como valores numéricos independentes de densidade e devem respeitar a escala de fonte configurada no dispositivo.
 - Escala tipográfica sugerida:
 
 | Estilo | Tamanho | Peso | Uso |
 |---|---|---|---|
-| Display | 28sp | Bold | Valor de destaque (ex.: saldo devedor total na Home). |
-| Título | 20sp | SemiBold | Títulos de tela (app bar). |
-| Subtítulo | 16sp | Medium | Nomes de pessoas, títulos de card. |
-| Corpo | 14sp | Regular | Textos descritivos, observações. |
-| Legenda | 12sp | Regular | Datas, textos auxiliares, labels de campo. |
+| Display | 28 | Bold | Valor de destaque (ex.: saldo devedor total na Home). |
+| Título | 20 | SemiBold | Títulos de tela (cabeçalho). |
+| Subtítulo | 16 | Medium | Nomes de pessoas, títulos de card. |
+| Corpo | 14 | Regular | Textos descritivos, observações. |
+| Legenda | 12 | Regular | Datas, textos auxiliares, labels de campo. |
 
 - Valores monetários sempre em peso **Medium/SemiBold**, nunca Regular, para reforçar sua importância visual mesmo em listas densas.
 
 ## Espaçamentos
 
-Sistema de espaçamento em múltiplos de 4dp, para consistência entre telas:
+Sistema de espaçamento em múltiplos de 4, usando unidades independentes de densidade do React Native:
 
 | Token | Valor | Uso |
 |---|---|---|
-| `spacing.xs` | 4dp | Espaço entre ícone e texto adjacente. |
-| `spacing.sm` | 8dp | Espaço entre elementos relacionados dentro de um card. |
-| `spacing.md` | 16dp | Padding padrão de cards e telas (margem lateral). |
-| `spacing.lg` | 24dp | Separação entre seções distintas de uma tela. |
-| `spacing.xl` | 32dp | Espaço acima/abaixo de estados vazios e telas de destaque (Home). |
+| `spacing.xs` | 4 | Espaço entre ícone e texto adjacente. |
+| `spacing.sm` | 8 | Espaço entre elementos relacionados dentro de um card. |
+| `spacing.md` | 16 | Padding padrão de cards e telas (margem lateral). |
+| `spacing.lg` | 24 | Separação entre seções distintas de uma tela. |
+| `spacing.xl` | 32 | Espaço acima/abaixo de estados vazios e telas de destaque (Home). |
 
 ## Componentes
 
-- **Cards de lista** (pessoa, empréstimo, pagamento): fundo branco, cantos arredondados (12dp), leve elevação (shadow sutil), padding `spacing.md`.
-- **Botão primário**: preenchido, cor primária, cantos arredondados (8dp), altura mínima de 48dp (área de toque acessível).
+- **Cards de lista** (pessoa, empréstimo, pagamento): fundo branco, cantos arredondados (12), sombra sutil multiplataforma e padding `spacing.md`.
+- **Botão primário**: preenchido, cor primária, cantos arredondados (8), altura mínima de 48 (área de toque acessível).
 - **Botão secundário/terciário**: apenas texto ou outline, usado para ações como "Cancelar".
 - **Botão de ação flutuante (FAB)**: usado apenas para a ação de criação mais importante da tela (ex.: "+ Nova Pessoa", "+ Novo Empréstimo"). Nunca mais de um FAB por tela.
 - **Chips de status**: pequenas etiquetas coloridas ("Ativo" em verde-petróleo, "Quitado" em verde-sucesso) usadas em listas de empréstimos.
@@ -66,9 +67,9 @@ Sistema de espaçamento em múltiplos de 4dp, para consistência entre telas:
 
 ## Consistência visual
 
-- Todas as telas de formulário (Pessoa, Empréstimo, Pagamento) seguem o mesmo layout: app bar com botão "voltar" à esquerda e ação "Salvar" à direita, campos empilhados verticalmente, botão de submit sempre no app bar (não flutuando no rodapé), para reduzir a variação de padrões entre telas.
+- Todas as telas de formulário (Pessoa, Empréstimo, Pagamento) seguem o mesmo layout: cabeçalho de navegação do Expo Router com botão "voltar" à esquerda e ação "Salvar" à direita, campos empilhados verticalmente e ação de submit no cabeçalho.
 - Todas as listas (pessoas, empréstimos, pagamentos) usam o mesmo componente de card-lista, garantindo familiaridade entre telas.
-- Ícones seguem um único set consistente (ex.: Material Symbols), sem misturar estilos de ícone (outline vs. filled) na mesma tela.
+- Ícones seguem uma única família disponível no ecossistema Expo, sem misturar estilos outline e filled na mesma tela.
 - Todas as datas seguem o formato `dd/mm/aaaa`; todos os valores seguem o formato `R$ 0.000,00` (RNF10).
 
 ## Estados vazios

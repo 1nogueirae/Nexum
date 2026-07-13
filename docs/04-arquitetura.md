@@ -2,160 +2,150 @@
 
 ## Visão geral
 
-Nexum adota uma arquitetura em camadas, inspirada em **Clean Architecture**, mas deliberadamente **simplificada** para o tamanho e a natureza do projeto (app single-user, offline, mantido por uma única pessoa). O objetivo é ter separação de responsabilidades suficiente para permitir evolução (ex.: sincronização em nuvem futura) sem o overhead de um projeto enterprise.
+Nexum será desenvolvido em **React Native com Expo e TypeScript**, usando o **Expo Go** durante o desenvolvimento inicial. A arquitetura em camadas é inspirada em Clean Architecture, simplificada para um aplicativo single-user, offline e mantido por uma única pessoa.
 
 ```mermaid
 flowchart TD
-    UI["Presentation (Widgets + State)"] --> APP["Application (Use Cases / Services)"]
-    APP --> DOM["Domain (Entidades + Regras)"]
-    APP --> DATA["Data (Repositórios + Isar)"]
+    ROUTES["Rotas — Expo Router"] --> UI["Presentation — componentes e estado de tela"]
+    UI --> APP["Application — casos de uso e serviços"]
+    APP --> DOM["Domain — entidades e regras"]
+    APP --> DATA["Data — repositórios e SQLite"]
     DATA --> DOM
+    DATA --> SQLITE["expo-sqlite"]
 ```
-
-### Camadas
 
 | Camada | Responsabilidade |
 |---|---|
-| **Presentation** | Widgets Flutter, telas, navegação, gerenciamento de estado da UI. Não conhece detalhes de persistência. |
-| **Application** | Casos de uso (ex.: `RegisterPayment`, `PayoffLoan`). Orquestra regras de negócio que envolvem mais de uma entidade. |
-| **Domain** | Entidades puras (Pessoa, Emprestimo, Pagamento) e regras de negócio intrínsecas a elas (ex.: cálculo de saldo devedor). Sem dependência de Flutter ou de Isar. |
-| **Data** | Repositórios que implementam o acesso ao banco local (Isar), convertendo entre modelos de persistência e entidades de domínio. |
+| **Routes** | Arquivos do Expo Router. Compõem telas, parâmetros e layouts de navegação, sem regras de negócio. |
+| **Presentation** | Componentes React Native, formulários, feedback visual e stores de estado da interface. Não executa SQL. |
+| **Application** | Casos de uso e serviços que orquestram operações envolvendo uma ou mais entidades. |
+| **Domain** | Entidades, tipos e regras de negócio em TypeScript puro, sem dependências de React Native, Expo ou SQLite. |
+| **Data** | Repositórios, mapeadores, migrations e acesso ao banco por `expo-sqlite`. |
 
-Essa separação permite, por exemplo, trocar Isar por outro mecanismo de persistência (ou adicionar sincronização remota) sem alterar a camada de apresentação ou as regras de domínio.
+Essa separação mantém as regras de negócio testáveis e permite trocar a persistência ou adicionar sincronização futura sem reescrever a interface.
 
----
+## Stack técnica
 
-## Organização de pastas Flutter
+| Área | Escolha |
+|---|---|
+| Framework mobile | React Native gerenciado pelo Expo |
+| Linguagem | TypeScript em modo estrito |
+| Ambiente inicial | Expo Go |
+| Navegação | Expo Router |
+| Persistência | `expo-sqlite` |
+| Estado de UI | Zustand, com stores pequenas por contexto |
+| Testes | Jest, `jest-expo` e React Native Testing Library |
+| Build Android | EAS Build |
 
-## Organização de pastas Flutter
+As versões exatas serão definidas quando o projeto for inicializado, sempre usando versões compatíveis com o Expo SDK adotado. Dependências do Expo devem ser instaladas pelo comando recomendado pelo Expo para evitar incompatibilidades.
+
+## Limite de compatibilidade com Expo Go
+
+Durante o MVP:
+
+- só podem ser adotadas bibliotecas incluídas no Expo SDK ou implementadas apenas em JavaScript/TypeScript;
+- não haverá edição manual de código nativo nem manutenção das pastas `android/` e `ios/`;
+- toda nova dependência deve ser verificada quanto à compatibilidade com o Expo Go antes de entrar no projeto;
+- se uma necessidade futura exigir código nativo ausente no Expo Go, a migração para um development build deverá ser registrada como nova decisão arquitetural.
+
+O Expo Go é o cliente de desenvolvimento, não o artefato distribuído ao usuário. Builds instaláveis e de produção serão gerados com EAS Build.
+
+## Organização planejada de pastas
 
 ```text
-lib/
-├── main.dart
-├── app/
-│   ├── app.dart                # MaterialApp, tema, rotas
-│   └── theme/
-│       ├── colors.dart
-│       ├── typography.dart
-│       └── spacing.dart
+src/
+├── app/                         # somente rotas e layouts do Expo Router
+│   ├── _layout.tsx
+│   ├── index.tsx
+│   ├── people/
+│   └── loans/
 ├── domain/
 │   ├── entities/
-│   │   ├── person.dart
-│   │   ├── loan.dart
-│   │   └── payment.dart
-│   └── value_objects/
-│       └── money.dart          # tipo Money para valores em centavos
+│   │   ├── person.ts
+│   │   ├── loan.ts
+│   │   └── payment.ts
+│   └── value-objects/
+│       └── money.ts
 ├── application/
-│   ├── usecases/
-│   │   ├── person/
-│   │   │   ├── create_person.dart
-│   │   │   ├── update_person.dart
-│   │   │   └── delete_person.dart
-│   │   ├── loan/
-│   │   │   ├── create_loan.dart
-│   │   │   ├── update_loan.dart
-│   │   │   └── delete_loan.dart
-│   │   └── payment/
-│   │       ├── register_payment.dart
-│   │       ├── settle_loan.dart
-│   │       └── delete_payment.dart
+│   ├── use-cases/
+│   │   ├── people/
+│   │   ├── loans/
+│   │   └── payments/
 │   └── services/
-│       └── outstanding_balance_service.dart
+│       └── outstanding-balance-service.ts
 ├── data/
-│   ├── models/                 # modelos anotados @Collection (Isar)
-│   │   ├── person_model.dart
-│   │   ├── loan_model.dart
-│   │   └── payment_model.dart
-│   ├── repositories/
-│   │   ├── person_repository.dart
-│   │   ├── loan_repository.dart
-│   │   └── payment_repository.dart
-│   └── datasources/
-│       └── isar_datasource.dart
+│   ├── database/
+│   │   ├── connection.ts
+│   │   ├── migrations/
+│   │   └── schema.ts
+│   ├── mappers/
+│   └── repositories/
 ├── presentation/
-│   ├── home/
-│   │   ├── home_screen.dart
-│   │   └── home_controller.dart
-│   ├── people/
-│   │   ├── people_list_screen.dart
-│   │   ├── person_details_screen.dart
-│   │   ├── person_form_screen.dart
-│   │   └── people_controller.dart
-│   ├── loans/
-│   │   ├── loan_details_screen.dart
-│   │   ├── loan_form_screen.dart
-│   │   └── loans_controller.dart
-│   ├── payments/
-│   │   ├── payment_form_screen.dart
-│   │   └── payments_controller.dart
-│   └── shared/
-│       ├── widgets/
-│       └── formatters/         # formatação de moeda e data
-└── core/
+│   ├── features/
+│   │   ├── home/
+│   │   ├── people/
+│   │   ├── loans/
+│   │   └── payments/
+│   ├── components/
+│   ├── hooks/
+│   ├── stores/
+│   └── theme/
+└── shared/
     ├── errors/
-    ├── extensions/
+    ├── formatters/
     └── utils/
 ```
 
-### Justificativa da organização
+Os nomes são um direcionamento, não arquivos a serem criados antecipadamente. `src/app/` permanece reservado a rotas; componentes e lógica reutilizável ficam fora dele.
 
-- Pastas por **camada primeiro, feature depois** (`domain/`, `application/`, `data/`, `presentation/`) tornam explícito o limite arquitetural.
-- Dentro de `presentation/`, a subdivisão é por **feature** (people, loans, payments), o que é mais natural para navegação de um app pequeno do que separar por tipo de widget.
-- `core/` concentra utilitários transversais (formatação, extensões, tratamento de erro) para evitar duplicação.
+## Navegação
 
----
+O Expo Router será usado por oferecer roteamento baseado em arquivos e integração direta com projetos Expo. Os arquivos de rota devem permanecer finos: recebem parâmetros, conectam dependências e renderizam componentes da camada Presentation.
+
+Os fluxos principais usarão navegação em pilha. Abas poderão ser usadas apenas onde já fazem parte da experiência definida, como a alternância entre empréstimos ativos e quitados.
 
 ## Gerenciamento de estado
 
-**Riverpod** (`flutter_riverpod`).
+Zustand será usado apenas para estado compartilhado de interface e coordenação assíncrona entre telas. Estado local de formulário ou componente continua em hooks locais quando não precisa ser compartilhado.
 
-### Justificativa
+Regras:
 
-- É a opção com melhor equilíbrio entre simplicidade de uso e testabilidade para um projeto solo.
-- Elimina a necessidade de `BuildContext` para acessar estado, o que simplifica a camada de aplicação e os testes.
-- Facilita a injeção de repositórios (ex.: `personRepositoryProvider`) sem boilerplate de um service locator manual.
-- Escala bem caso o projeto cresça (ex.: adicionar cache, sincronização) sem precisar de migração de arquitetura.
-- Evita a complexidade adicional de soluções como Bloc (mais verboso) para um app com regras de UI relativamente simples.
-
-### Padrão de uso
-
-- **Providers de repositório**: expõem instâncias dos repositórios (camada Data).
-- **Providers de caso de uso**: expõem os use cases da camada Application.
-- **StateNotifierProvider / AsyncNotifierProvider**: gerenciam o estado de cada tela (ex.: lista de pessoas, detalhe de empréstimo), consumindo os use cases.
-- Widgets são "burros": apenas leem providers (`ref.watch`) e disparam ações (`ref.read(...).someAction()`).
-
----
+- uma store pequena por contexto de negócio, evitando uma store global monolítica;
+- stores chamam casos de uso, nunca executam SQL diretamente;
+- dados derivados, como saldo devedor, continuam sob responsabilidade do domínio/aplicação;
+- acesso por seletores para limitar renderizações desnecessárias;
+- dependências são montadas em um ponto de composição, sem service locator acessível pelo domínio.
 
 ## Persistência
 
-**Isar** é o banco local recomendado.
+`expo-sqlite` será a persistência local porque funciona no Expo Go, mantém o banco entre reinicializações e oferece transações e integridade relacional adequadas ao domínio.
 
-### Justificativa (Isar vs. SQLite puro)
-
-| Critério | Isar | Isar (sqflite) |
-|---|---|---|
-| Produtividade | Modelos Dart anotados, sem SQL manual | Exige escrever/manter SQL e migrations manuais |
-| Performance | Otimizado para Flutter, leitura muito rápida | Bom, mas overhead de parsing de queries |
-| Consultas reativas | Suporte nativo a *watchers* (streams) | Requer implementação manual de reatividade |
-| Relacionamentos | Links/backlinks tipados | Chaves estrangeiras manuais via SQL |
-| Curva de aprendizado | Baixa para quem já usa Dart | Exige conhecimento de SQL |
-
-Como o projeto é mantido por uma única pessoa e prioriza velocidade de desenvolvimento sem sacrificar robustez, Isar é a escolha mais alinhada à filosofia de simplicidade do Nexum. Detalhes de schema em `09-banco.md`.
-
----
+As operações compostas — pagamento com atualização de status e exclusões em cascata — devem ser atômicas. Foreign keys serão habilitadas na inicialização, migrations serão versionadas e detalhes do schema ficam em `09-banco.md`.
 
 ## Padrões utilizados
 
-| Padrão | Onde é aplicado | Motivo |
-|---|---|---|
-| Repository Pattern | Camada Data | Isola a camada de domínio/aplicação dos detalhes do Isar. |
-| Use Case (Command) | Camada Application | Cada ação de negócio é uma classe/função isolada, testável individualmente. |
-| Value Object (`Money`) | Domain | Evita erros de ponto flutuante e centraliza formatação/validação de valores monetários. |
-| Result/Either para erros | Application → Presentation | Evita exceptions "soltas" chegando à UI; erros de negócio (ex.: pagamento maior que saldo) são valores, não exceptions. |
-| Provider/DI via Riverpod | Toda a árvore | Desacopla criação de dependências do uso, facilita testes. |
+| Padrão | Aplicação |
+|---|---|
+| Repository | Isola os casos de uso dos detalhes de SQLite. |
+| Use Case | Mantém cada ação de negócio explícita e testável. |
+| Value Object `Money` | Centraliza valores inteiros em centavos e impede operações inválidas. |
+| Result discriminado | Representa sucesso e falhas esperadas sem exceptions genéricas na UI. |
+| Mapper | Converte linhas do banco em entidades de domínio. |
+| Migrations versionadas | Permitem evoluir o schema sem perda de dados. |
 
-## Justificativas gerais da arquitetura
+## Regras de dependência
 
-1. **Separação em camadas, mas sem excesso de abstração**: não há interfaces abstratas "por precaução" onde só existirá uma implementação (ex.: não haverá `IPessoaRepository` abstrato se só existir Isar) — evita boilerplate desnecessário em projeto solo. Abstrações serão introduzidas apenas quando o benefício for concreto (ex.: ao introduzir sincronização).
-2. **Domain sem dependência de Flutter/Isar**: garante que as regras de negócio (cálculo de saldo, validações) possam ser testadas em testes puramente unitários, rápidos, sem necessidade de widget test ou banco real.
-3. **Preparação para o futuro sem construir para o futuro**: a arquitetura já separa persistência do domínio, então adicionar sincronização em nuvem no futuro significa criar um novo `SyncRepository`/`RemoteDataSource`, sem tocar em regras de negócio ou UI.
+1. Domain não importa React, React Native, Expo, Zustand nem `expo-sqlite`.
+2. Application depende de Domain e de contratos mínimos necessários aos casos de uso.
+3. Data implementa a persistência e conhece Application/Domain, nunca Presentation.
+4. Presentation conhece casos de uso e tipos de Domain, mas não conhece SQL.
+5. Routes conhecem navegação e Presentation; não contêm regras de negócio.
+
+## Referências oficiais
+
+- [Expo Router](https://docs.expo.dev/router/introduction/)
+- [Compatibilidade e limites do Expo Go](https://docs.expo.dev/develop/development-builds/introduction/)
+- [`expo-sqlite`](https://docs.expo.dev/versions/latest/sdk/sqlite/)
+- [TypeScript no Expo](https://docs.expo.dev/guides/typescript/)
+- [Testes unitários no Expo](https://docs.expo.dev/develop/unit-testing/)
+- [EAS Build](https://docs.expo.dev/build/)

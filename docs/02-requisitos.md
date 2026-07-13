@@ -62,9 +62,9 @@
 | RNF02 | Usabilidade | Qualquer fluxo principal (cadastrar pessoa, registrar pagamento) deve ser executável em no máximo 3 toques a partir da Home. |
 | RNF03 | Disponibilidade | O aplicativo deve funcionar 100% offline, sem qualquer dependência de rede no MVP. |
 | RNF04 | Confiabilidade | Nenhuma operação de escrita (criar/editar/excluir) pode deixar o banco em estado inconsistente (ex.: saldo divergente da soma real de pagamentos). |
-| RNF05 | Portabilidade | O app deve rodar em dispositivos Android a partir da versão suportada pelo Flutter estável vigente (ver `04-arquitetura.md`). |
+| RNF05 | Portabilidade | O app deve rodar nos dispositivos Android suportados pela versão vigente do Expo SDK adotada pelo projeto (ver `04-arquitetura.md`). |
 | RNF06 | Manutenibilidade | O código deve seguir separação clara de camadas (ver `04-arquitetura.md`) para permitir evolução (ex.: sincronização) sem reescrita. |
-| RNF07 | Consistência visual | Toda a interface deve seguir as diretrizes definidas em `10-ui-guidelines.md`. |
+| RNF07 | Consistência visual | Toda a interface deve seguir as diretrizes definidas em `10-guidelines.md`. |
 | RNF08 | Simplicidade | Nenhuma tela do MVP pode conter mais de uma ação primária em destaque (evitar poluição de interface). |
 | RNF09 | Persistência | Os dados devem ser armazenados localmente de forma durável, sobrevivendo a fechamento do app e reinicialização do dispositivo. |
 | RNF10 | Localização | Valores monetários exibidos em Real (R$), formato brasileiro (ex.: R$ 1.234,56); datas em formato dd/mm/aaaa. |

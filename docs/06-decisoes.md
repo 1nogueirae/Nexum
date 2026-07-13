@@ -1,123 +1,97 @@
 # 06 — Decisões (ADR resumido)
 
-Este documento registra as principais decisões já tomadas para o Nexum, no formato resumido "Decisão / Contexto / Alternativas consideradas / Consequências".
+Este documento registra as decisões vigentes do Nexum. Decisões substituídas não devem continuar orientando a implementação.
 
----
+## D01 — Empréstimos sem juros
 
-## D01 — Empréstimos sem juros (apenas valor principal)
+**Decisão:** o saldo devedor é sempre `valor emprestado − soma de pagamentos`.
 
-**Contexto:** Definir se o domínio precisa modelar juros, correção monetária ou multas.
+**Consequência:** juros, correção e multas não fazem parte do núcleo do domínio.
 
-**Decisão:** O MVP e o modelo de domínio não incluem juros. O saldo devedor é sempre `valor emprestado − soma de pagamentos`.
+## D02 — Direção única do empréstimo
 
-**Alternativas consideradas:** Juros simples; juros compostos; campo de taxa configurável por empréstimo.
+**Decisão:** o Nexum registra apenas dinheiro emprestado pelo usuário a terceiros.
 
-**Consequências:** Modelo de domínio significativamente mais simples (sem necessidade de datas de referência para cálculo de juros, sem taxas, sem periodicidade). Caso juros sejam necessários no futuro, serão um módulo opcional e isolado, não uma alteração no núcleo do domínio.
+**Consequência:** a experiência responde sempre a “quem me deve e quanto”, sem misturar contas a pagar.
 
----
+## D03 — Moeda fixa em BRL
 
-## D02 — Direção única do empréstimo (apenas dinheiro concedido pelo usuário)
+**Decisão:** não há seleção ou conversão de moeda no MVP.
 
-**Contexto:** Definir se o app deveria controlar também dívidas do próprio usuário com terceiros.
+**Consequência:** valores são inteiros em centavos e a apresentação usa o formato brasileiro.
 
-**Decisão:** Nexum registra exclusivamente dinheiro que o usuário empresta a outras pessoas.
+## D04 — MVP local, sem backend e sem autenticação
 
-**Alternativas consideradas:** Modelo bidirecional, com um campo `tipo` (`concedido` / `recebido`) em cada empréstimo.
+**Decisão:** dados ficam somente no dispositivo durante o MVP.
 
-**Consequências:** Modelo mental do app permanece simples ("quem me deve, e quanto"). Elimina a necessidade de somar/subtrair saldos em direções opostas na Home e nas listagens. Se essa necessidade surgir no futuro, será tratada como uma nova entidade paralela, não como extensão do modelo atual.
+**Consequência:** o app funciona offline e sincronização será uma evolução independente.
 
----
+## D05 — React Native com Expo e TypeScript
 
-## D03 — Moeda fixa em Real (BRL)
+**Contexto:** a fundação técnica anterior foi abandonada antes do desenvolvimento do produto.
 
-**Contexto:** Definir se o app precisa suportar múltiplas moedas.
+**Decisão:** usar React Native gerenciado pelo Expo, com TypeScript em modo estrito.
 
-**Decisão:** Moeda fixa em BRL, sem seleção de moeda pelo usuário.
+**Alternativas consideradas:** React Native CLI com projetos nativos mantidos manualmente; outras soluções mobile multiplataforma.
 
-**Alternativas consideradas:** Campo de moeda por pessoa/empréstimo; conversão automática via API externa.
+**Consequências:** o código de produto será TypeScript; a configuração nativa será administrada pelo Expo; os artefatos técnicos anteriores deixam de fazer parte do projeto.
 
-**Consequências:** Elimina complexidade de formatação/conversão de moedas e qualquer dependência de rede para taxas de câmbio, mantendo o app 100% offline. Simplifica o Value Object `Money` (apenas um inteiro em centavos, sem código de moeda associado).
+## D06 — Expo Go no desenvolvimento inicial
 
----
+**Decisão:** o MVP deve executar no Expo Go durante o desenvolvimento.
 
-## D04 — Sem backend e sem autenticação no MVP
+**Consequências:** dependências com código nativo customizado ficam proibidas enquanto essa decisão vigorar. O Expo Go não substitui builds instaláveis ou de produção, que serão gerados com EAS Build. Uma futura migração para development build exige novo ADR.
 
-**Contexto:** Definir se o MVP precisa de conta de usuário ou servidor.
+## D07 — Navegação com Expo Router
 
-**Decisão:** O MVP é 100% local e offline, sem login e sem backend.
+**Decisão:** usar rotas baseadas em arquivos com Expo Router.
 
-**Alternativas consideradas:** Autenticação local simples (PIN/biometria); backend próprio desde o início.
+**Consequência:** `src/app/` contém apenas rotas e layouts; componentes e regras ficam nas demais camadas.
 
-**Consequências:** Reduz drasticamente a superfície de implementação inicial. Abre espaço para, futuramente, adicionar autenticação local (ex.: biometria) como camada opcional de segurança do dispositivo, sem relação com "contas de usuário" — e sincronização remota como evolução posterior e desacoplada.
+## D08 — Persistência local com `expo-sqlite`
 
----
+**Contexto:** o banco precisa funcionar offline e dentro do Expo Go.
 
-## D05 — Persistência local com Isar
+**Decisão:** usar SQLite por meio de `expo-sqlite`, com foreign keys, migrations versionadas e transações.
 
-**Contexto:** Escolher o mecanismo de banco local entre Isar e SQLite (sqflite).
+**Alternativas consideradas:** armazenamento chave-valor; ORM ou banco que exija módulo nativo adicional.
 
-**Decisão:** Isar como banco de dados local principal.
+**Consequências:** relacionamentos e cascatas são expressos pelo schema; consultas reativas são coordenadas pela aplicação após commits; migrations passam a ser responsabilidade explícita do projeto.
 
-**Alternativas consideradas:** SQLite via `sqflite`; Hive (descartado por ser menos adequado a dados relacionais).
+## D09 — Estado de interface com Zustand
 
-**Consequências:** Maior produtividade (schemas tipados em Dart, sem SQL manual) e suporte nativo a queries reativas, importante para atualizar a UI automaticamente quando o saldo devedor muda. Justificativa completa em `04-arquitetura.md` e `09-banco.md`.
+**Decisão:** usar Zustand para estado compartilhado de tela e coordenação assíncrona, preservando hooks locais para estado não compartilhado.
 
----
+**Alternativas consideradas:** somente Context API; Redux Toolkit.
 
-## D06 — Gerenciamento de estado com Riverpod
+**Consequência:** stores permanecem pequenas, segmentadas e sem acesso direto ao SQLite.
 
-**Contexto:** Escolher entre Riverpod, Bloc, Provider (legado) ou GetX.
+## D10 — Arquitetura em camadas simplificada
 
-**Decisão:** Riverpod.
+**Decisão:** separar Routes / Presentation / Application / Domain / Data sem criar abstrações sem uso concreto.
 
-**Alternativas consideradas:** Bloc (mais verboso para as necessidades do app); Provider clássico (superado pelo próprio Riverpod); GetX (menos alinhado a boas práticas de testabilidade e separação de camadas).
+**Consequência:** regras de negócio não dependem de React Native ou Expo e podem ser testadas isoladamente.
 
-**Consequências:** Boa testabilidade dos casos de uso, injeção de dependência simples, sem necessidade de `BuildContext` na camada de aplicação.
+## D11 — Valores monetários como inteiros em centavos
 
----
+**Decisão:** valores nunca usam ponto flutuante como fonte de verdade.
 
-## D07 — Arquitetura em camadas simplificada (sem abstrações prematuras)
+**Consequência:** cálculos são determinísticos; a formatação é responsabilidade da apresentação.
 
-**Contexto:** Definir o nível de rigor arquitetural apropriado para um projeto solo de portfólio.
+## D12 — Status como cache derivado
 
-**Decisão:** Adotar separação Domain / Application / Data / Presentation, mas sem interfaces abstratas onde exista apenas uma implementação concreta.
+**Decisão:** o saldo é calculado pelos pagamentos; `status` é um cache transacional para consultas rápidas.
 
-**Alternativas consideradas:** Clean Architecture "completa", com interfaces abstratas para cada repositório desde o início.
+**Consequência:** toda escrita que afete o saldo deve atualizar o status na mesma transação SQLite. O serviço central é o `OutstandingBalanceService`.
 
-**Consequências:** Código mais direto e fácil de manter por uma única pessoa, sem perder a separação de responsabilidades necessária para futura evolução (ex.: sincronização). Abstrações serão adicionadas apenas quando houver uma segunda implementação real a suportar.
+## D13 — Exclusão em cascata
 
----
+**Decisão:** excluir pessoa remove empréstimos e pagamentos; excluir empréstimo remove pagamentos, sempre após confirmação.
 
-## D08 — Valores monetários como inteiros em centavos
+**Consequência:** o banco usa `ON DELETE CASCADE`, e a interface informa o impacto antes da operação.
 
-**Contexto:** Evitar erros de arredondamento inerentes a `double` em cálculos financeiros.
+## D14 — Testes com ferramentas do ecossistema Expo
 
-**Decisão:** Todo valor monetário é armazenado e manipulado como `int` (centavos), nunca como `double`.
+**Decisão:** usar Jest com `jest-expo` para unidades e React Native Testing Library para componentes.
 
-**Alternativas consideradas:** Uso de `double`; uso de pacotes de decimal de precisão arbitrária.
-
-**Consequências:** Elimina uma classe inteira de bugs de arredondamento sem exigir dependências externas. Formatação para exibição (R$ 1.234,56) é responsabilidade exclusiva da camada de apresentação.
-
----
-
-## D09 — Status do empréstimo como cache derivado, não fonte de verdade
-
-**Contexto:** Definir se "ativo/quitado" é um campo independente ou sempre calculado.
-
-**Decisão:** O saldo devedor é sempre calculado a partir dos pagamentos; o campo `status` no banco é um cache de leitura, recalculado a cada escrita relevante (criar/editar/excluir pagamento, editar/excluir empréstimo).
-
-**Alternativas consideradas:** Calcular status sempre em tempo real na consulta (sem persistir), evitando cache.
-
-**Consequências:** Permite consultas rápidas por status (ex.: "listar ativos") sem precisar buscar e somar pagamentos de todos os empréstimos a cada tela. Exige disciplina para garantir que toda operação que afeta pagamentos also atualize o cache (centralizado no `OutStandingBalanceService`, ver `04-arquitetura.md`).
-
----
-
-## D10 — Exclusão em cascata
-
-**Contexto:** Definir o comportamento ao excluir pessoa/empréstimo com dados filhos.
-
-**Decisão:** Excluir uma pessoa remove seus empréstimos; excluir um empréstimo remove seus pagamentos — sempre mediante confirmação explícita do usuário.
-
-**Alternativas consideradas:** Exclusão "soft" (marcação como inativo, sem remoção física).
-
-**Consequências:** Modelo de dados mais simples (sem necessidade de filtrar registros "excluídos" em todas as queries). Custo: perda definitiva do histórico ao excluir — mitigado por exigir confirmação explícita e exibir o impacto (ex.: saldo devedor envolvido) antes da exclusão.
+**Consequência:** o domínio continua testável sem runtime nativo, e a UI é verificada pelo comportamento percebido pelo usuário.

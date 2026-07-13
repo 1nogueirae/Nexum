@@ -1,6 +1,6 @@
 # 08 — Wireframes
 
-Wireframes de baixa fidelidade, representando estrutura e hierarquia de informação de cada tela. Não representam estilo visual final (ver `10-ui-guidelines.md`).
+Wireframes de baixa fidelidade, representando estrutura e hierarquia de informação de cada tela. Não representam estilo visual final (ver `10-guidelines.md`).
 
 ---
 

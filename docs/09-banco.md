@@ -2,164 +2,111 @@
 
 ## Tecnologia
 
-**Isar** (ver justificativa comparativa em `04-arquitetura.md`).
+O banco local será **SQLite**, acessado por `expo-sqlite`. A escolha é compatível com Expo Go, persiste dados entre reinicializações e oferece transações e integridade relacional.
 
-## Coleções (Collections)
+## Convenções
 
-### PersonModel
+- IDs públicos são UUIDs em texto.
+- Datas e timestamps são armazenados como texto ISO 8601 em UTC; datas de negócio são formatadas em `dd/mm/aaaa` apenas na apresentação.
+- Valores monetários são inteiros em centavos.
+- Nomes do banco e colunas usam `snake_case`; entidades TypeScript usam `camelCase`.
+- `PRAGMA foreign_keys = ON` é aplicado em toda abertura do banco.
+- WAL deve ser habilitado na criação do banco para melhorar o comportamento geral de leitura/escrita.
 
-```dart
-@collection
-class PersonModel {
-  Id id = Isar.autoIncrement;
+## Tabela `people`
 
-  @Index(unique: true, replace: false)
-  late String uuid;
+| Coluna | Tipo | Restrições |
+|---|---|---|
+| `id` | TEXT | PRIMARY KEY, UUID |
+| `name` | TEXT | NOT NULL, valor não vazio após trim |
+| `phone` | TEXT | NULL |
+| `note` | TEXT | NULL |
+| `created_at` | TEXT | NOT NULL, ISO 8601 |
+| `updated_at` | TEXT | NOT NULL, ISO 8601 |
 
-  @Index(type: IndexType.value, caseSensitive: false)
-  late String name;
+Índice adicional em `name COLLATE NOCASE` para a pesquisa case-insensitive.
 
-  String? phone;
-  String? note;
+## Tabela `loans`
 
-  late DateTime createdAt;
-  late DateTime updatedAt;
+| Coluna | Tipo | Restrições |
+|---|---|---|
+| `id` | TEXT | PRIMARY KEY, UUID |
+| `person_id` | TEXT | NOT NULL, FK para `people(id)` com `ON DELETE CASCADE` |
+| `amount_in_cents` | INTEGER | NOT NULL, maior que zero |
+| `description` | TEXT | NULL |
+| `date` | TEXT | NOT NULL, data ISO 8601 |
+| `status` | TEXT | NOT NULL, `active` ou `paid` |
+| `created_at` | TEXT | NOT NULL, ISO 8601 |
+| `updated_at` | TEXT | NOT NULL, ISO 8601 |
 
-  final loans = IsarLinks<LoanModel>();
-}
-```
+Índices em `person_id`, `status` e `date`.
 
-### LoanModel
+## Tabela `payments`
 
-```dart
-@collection
-class LoanModel {
-  Id id = Isar.autoIncrement;
+| Coluna | Tipo | Restrições |
+|---|---|---|
+| `id` | TEXT | PRIMARY KEY, UUID |
+| `loan_id` | TEXT | NOT NULL, FK para `loans(id)` com `ON DELETE CASCADE` |
+| `amount_in_cents` | INTEGER | NOT NULL, maior que zero |
+| `date` | TEXT | NOT NULL, data ISO 8601 |
+| `note` | TEXT | NULL |
+| `created_at` | TEXT | NOT NULL, ISO 8601 |
 
-  @Index(unique: true, replace: false)
-  late String uuid;
-
-  @Index()
-  late String personUuid;
-
-  late int amountInCents;
-  String? description;
-
-  @Index()
-  late DateTime date;
-
-  @Index()
-  @enumerated
-  late LoanStatus status; // active, paid
-
-  late DateTime createdAt;
-  late DateTime updatedAt;
-
-  final payments = IsarLinks<PaymentModel>();
-
-  final person = IsarLink<PersonModel>();
-}
-
-enum LoanStatus { active, paid }
-```
-
-### PaymentModel
-
-```dart
-@collection
-class PaymentModel {
-  Id id = Isar.autoIncrement;
-
-  @Index(unique: true, replace: false)
-  late String uuid;
-
-  @Index()
-  late String loanUuid;
-
-  late int amountInCents;
-
-  @Index()
-  late DateTime date;
-
-  String? note;
-  late DateTime createdAt;
-
-  final loan = IsarLink<LoanModel>();
-}
-```
-
----
+Índices em `loan_id` e `date`.
 
 ## Relacionamentos
 
-| Origem | Destino | Tipo Isar | Descrição |
-| ------- | ------- | --------- | --------- |
-| PersonModel | LoanModel | `IsarLinks` (1:N) | Uma pessoa tem vários empréstimos. |
-| LoanModel | PersonModel | `IsarLink` (N:1) | Backlink para consulta reversa rápida. |
-| LoanModel | PaymentModel | `IsarLinks` (1:N) | Um empréstimo tem vários pagamentos. |
-| PaymentModel | LoanModel | `IsarLink` (N:1) | Backlink para consulta reversa rápida. |
+| Origem | Destino | Cardinalidade | Regra |
+|---|---|---|---|
+| `people` | `loans` | 1:N | Exclusão da pessoa remove seus empréstimos. |
+| `loans` | `payments` | 1:N | Exclusão do empréstimo remove seus pagamentos. |
 
-> Observação: além dos links do Isar, mantenho os campos `personUuid` / `loanUuid` como chaves de referência explícitas. Isso simplifica queries diretas por índice (mais previsíveis do que navegar apenas por `IsarLinks`) e facilita uma futura migração de motor de persistência, caso necessário.
+## Saldo e status
 
----
+O saldo devedor não é armazenado como coluna editável:
 
-## Índices
+`outstandingBalance = loan.amountInCents − sum(payments.amountInCents)`
 
-| Coleção | Campo | Tipo | Justificativa |
-| ------- | ----- | ---- | ------------- |
-| PersonModel | `uuid` | único | Identificador estável e portável entre dispositivos (útil para futura sincronização). |
-| PersonModel | `name` | valor, case-insensitive | Suporta a busca de pessoas (RF05) com performance, sem scan completo da tabela. |
-| LoanModel | `uuid` | único | Mesma justificativa de portabilidade. |
-| LoanModel | `personUuid` | valor | Acelera a consulta "listar empréstimos de uma pessoa" (usada nas telas de detalhe da pessoa). |
-| LoanModel | `status` | valor | Acelera as consultas "listar ativos" e "listar quitados" (RF12/RF13), que são acessadas com muita frequência. |
-| LoanModel | `date` | valor | Suporta ordenação cronológica das listagens sem sort completo em memória. |
-| PaymentModel | `uuid` | único | Mesma justificativa de portabilidade. |
-| PaymentModel | `loanUuid` | valor | Acelera a consulta "listar pagamentos de um empréstimo" (histórico, RF14). |
-| PaymentModel | `date` | valor | Suporta ordenação cronológica do histórico de pagamentos. |
+O campo `loans.status` é um cache de consulta. Na mesma transação que cria ou exclui um pagamento, ou altera um valor original permitido pela RN09, a aplicação:
 
----
+1. soma os pagamentos do empréstimo;
+2. valida que o resultado não supera o valor original;
+3. define `paid` quando o saldo é zero e `active` nos demais casos;
+4. atualiza `updated_at`.
 
-## Estratégia para o campo `status` (cache derivado)
+O `OutstandingBalanceService` centraliza esse processo. Nenhuma tela altera `status` diretamente.
 
-Conforme a decisão **D09** (`06-decisoes.md`), o `status` de `LoanModel` é um cache de leitura, não a fonte de verdade. Ele é recalculado dentro de uma única transação Isar sempre que:
+## Atomicidade
 
-1. Um pagamento é criado.
-2. Um pagamento é excluído.
-3. Um empréstimo tem seu valor original alterado (cenário raro, apenas possível se ainda não houver pagamentos — RN09).
+Devem ocorrer em transação exclusiva:
 
-O recálculo é centralizado no `OutstandingBalanceService` (camada Application), garantindo que nenhuma tela ou repositório atualize esse campo de forma isolada.
+- registro ou exclusão de pagamento com recálculo do status;
+- quitação do empréstimo;
+- alteração do valor original, quando permitida;
+- exclusões que dependam de validações imediatamente anteriores.
 
-```dart
-// Pseudo-código do recálculo, executado dentro de isar.writeTxn()
-final paymentsSum = await loanPayments.sum('amountInCents');
-final outstandingBalance = loan.amountInCents - paymentsSum;
-loan.status = outstandingBalance == 0 ? LoanStatus.paid : LoanStatus.active;
-```
+As cascatas são garantidas pelas foreign keys. Se qualquer etapa falhar, toda a operação é revertida.
 
----
+## Atualização da interface
 
-## Consultas reativas (Watchers)
+SQLite não é tratado como store de UI. Depois de um commit bem-sucedido, o caso de uso solicita a recarga das consultas afetadas nas stores Zustand. Isso mantém a reatividade explícita e evita que telas conheçam o mecanismo de persistência.
 
-O Isar permite observar coleções/queries como `Stream`. Isso é usado para:
+## Migrations
 
-- Atualizar a lista de pessoas automaticamente quando um saldo devedor muda (via alteração em `LoanModel`).
-- Atualizar a tela de detalhe do empréstimo em tempo real ao registrar/excluir um pagamento.
-- Atualizar as abas "Ativos"/"Quitados" automaticamente após qualquer operação que mude o `status`.
+- Cada mudança de schema recebe uma versão incremental.
+- A versão aplicada é controlada por `PRAGMA user_version`.
+- Migrations rodam em ordem e dentro de transações antes de liberar o app.
+- Nenhuma migration publicada pode ser editada retroativamente; correções usam uma nova versão.
+- Falha de migration impede o uso do banco e deve produzir erro técnico claro, sem apagar dados automaticamente.
 
-Essa reatividade nativa evita a necessidade de gerenciamento manual de "refresh" de tela após cada operação de escrita.
+## Integridade adicional
 
----
+As restrições simples ficam no schema, mas regras que dependem de agregações — como impedir pagamentos acima do saldo — são validadas pelo caso de uso dentro da mesma transação da escrita.
 
-## Integridade referencial
+## Preparação para sincronização futura
 
-Isar não impõe *foreign keys* como um SGBD relacional tradicional. A integridade é garantida na camada Application:
+UUIDs e timestamps portáveis evitam dependência de IDs autoincrementais locais. Isso prepara o schema para futura sincronização sem implementar backend, fila ou resolução de conflitos no MVP.
 
-- Exclusão de `PersonModel` → o `LoanRepository` remove, na mesma transação, todos os `LoanModel` vinculados (e, transitivamente, seus `PaymentModel`).
-- Exclusão de `LoanModel` → o `PaymentRepository` remove, na mesma transação, todos os `PaymentModel` vinculados.
-- Toda operação composta (exclusão em cascata, registro de pagamento + recálculo de status) é executada dentro de uma única `isar.writeTxn()`, garantindo atomicidade.
+## Referência oficial
 
----
-
-## Preparação para o futuro (sincronização)
-
-Os campos `uuid` (em vez de depender apenas do `Id` interno do Isar, que é local ao dispositivo) e os timestamps `createdAt`/`updatedAt` já preparam o schema para uma futura estratégia de sincronização (ex.: comparação de timestamps, resolução de conflitos "last write wins"), sem exigir migração de schema quando essa funcionalidade for implementada.
+- [`expo-sqlite`](https://docs.expo.dev/versions/latest/sdk/sqlite/)
