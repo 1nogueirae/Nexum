@@ -1,89 +1,86 @@
 # 05 — Roadmap
 
-O roadmap segue o princípio de simplicidade do Nexum: cada versão entrega um incremento pequeno e coeso, evitando acumular funcionalidades não essenciais antes de validar o uso real do MVP.
+O roadmap entrega incrementos pequenos e coesos. Nenhuma funcionalidade pós-MVP deve ser antecipada.
 
 ## v0.1 — Fundação técnica
 
-Objetivo: ter a base do projeto rodando, sem telas finais.
-
-- Setup do projeto Flutter.
-- Configuração do Isar e schemas iniciais (Person, Loan, Payment).
-- Estrutura de pastas definida em `04-arquitetura.md`.
-- Tema base (cores, tipografia) aplicado a um `MaterialApp` vazio.
-- Configuração de Riverpod na árvore de widgets.
+- Inicializar o projeto React Native com Expo e TypeScript.
+- Confirmar execução em dispositivo Android pelo Expo Go.
+- Configurar Expo Router e a estrutura definida em `04-arquitetura.md`.
+- Configurar `expo-sqlite`, migrations e schema inicial de Person, Loan e Payment.
+- Criar o ponto de composição das dependências e as stores Zustand iniciais.
+- Configurar lint, formatação e testes com Jest/`jest-expo`.
+- Aplicar tokens básicos de cor, tipografia e espaçamento.
 
 ## v0.2 — Cadastro de Pessoas
 
-- Tela de lista de pessoas.
-- Cadastrar pessoa.
-- Editar pessoa.
-- Excluir pessoa (com validação de empréstimos ativos).
-- Busca de pessoas por nome.
+- Lista, cadastro, edição e exclusão de pessoas.
+- Validação para exclusão com empréstimos ativos.
+- Pesquisa por nome.
 
 ## v0.3 — Empréstimos
 
-- Tela de detalhe da pessoa (com lista de empréstimos).
-- Criar empréstimo vinculado a uma pessoa.
-- Editar empréstimo (respeitando RN09).
-- Excluir empréstimo (cascata de pagamentos).
+- Detalhe da pessoa com seus empréstimos.
+- Criação, edição e exclusão de empréstimo.
+- Aplicação da RN09 e exclusão em cascata.
 
 ## v0.4 — Pagamentos e saldo devedor
 
-- Registrar pagamento parcial.
-- Quitar empréstimo (ação de conveniência).
-- Excluir pagamento com recálculo automático.
-- Cálculo e exibição do saldo devedor em tempo real.
+- Pagamento parcial e quitação.
+- Exclusão de pagamento com recálculo.
+- Saldo devedor e status atualizados após cada operação.
 
 ## v0.5 — Listagens e histórico
 
-- Aba/filtro de empréstimos ativos.
-- Aba/filtro de empréstimos quitados.
-- Tela de histórico detalhado do empréstimo (linha do tempo de pagamentos).
+- Filtros de empréstimos ativos e quitados.
+- Histórico detalhado e cronológico de pagamentos.
 
 ## v0.6 — Home e visão consolidada
 
-- Tela inicial (Home) com resumo: total emprestado ativo, número de pessoas devedoras, atalhos rápidos.
-- Indicador de saldo devedor por pessoa na lista.
+- Total emprestado ativo.
+- Número de pessoas devedoras.
+- Empréstimos recentes e atalhos rápidos.
+- Saldo devedor por pessoa.
 
 ## v0.7 — Polimento de UX
 
-- Estados vazios (nenhuma pessoa, nenhum empréstimo, nenhum pagamento).
-- Mensagens de erro padronizadas (ver `10-ui-guidelines.md`).
-- Confirmação de exclusão padronizada em todas as telas.
-- Ajustes de responsividade para diferentes tamanhos de tela Android.
+- Estados vazios.
+- Mensagens de erro conforme `10-guidelines.md`.
+- Confirmações destrutivas padronizadas.
+- Acessibilidade básica e responsividade em diferentes telas Android.
 
 ## v0.8 — Qualidade e testes
 
-- Testes unitários das regras de domínio (cálculo de saldo, validações de pagamento).
-- Testes de integração dos casos de uso principais.
-- Revisão de performance em bases maiores (ex.: 1.000+ empréstimos simulados).
+- Testes unitários do domínio.
+- Testes de integração dos casos de uso e repositórios SQLite.
+- Testes de componentes com React Native Testing Library.
+- Validação de performance com massa local simulada.
 
 ## v0.9 — Release candidate
 
-- Revisão geral de UI/UX contra `10-ui-guidelines.md`.
-- Ícone do app, splash screen, nome final de exibição.
-- Testes manuais completos de todos os fluxos (`07-fluxos.md`).
-- Preparação de build de release assinado.
+- Revisão de UI/UX contra `10-guidelines.md`.
+- Ícone, splash e nome de exibição na configuração do Expo.
+- Testes manuais dos fluxos de `07-fluxo.md`.
+- Configuração do projeto no EAS e geração de build Android de teste.
 
 ## v1.0 — MVP completo
 
-- Todas as funcionalidades do escopo do MVP (ver `02-requisitos.md`) implementadas, testadas e estáveis.
-- Uso real e contínuo pelo autor no dia a dia.
+- Todos os requisitos do MVP implementados e estáveis.
+- Build Android assinado gerado com EAS Build.
+- Uso real e contínuo pelo autor.
 
----
-
-## Funcionalidades de versões futuras (pós-1.0)
-
-Fora do MVP, mas mantidas no radar para não serem esquecidas — **nenhuma delas deve ser antecipada durante o desenvolvimento do MVP**:
+## Pós-1.0
 
 | Funcionalidade | Racional |
 |---|---|
-| Sincronização em nuvem | Permitir backup e uso em múltiplos dispositivos. |
-| Backup/restauração manual (arquivo local) | Passo intermediário mais simples que sincronização completa, útil antes dela. |
-| Exportação de relatórios (PDF/Excel) | Adiado deliberadamente do MVP; útil para compartilhar comprovantes. |
-| Notificações/lembretes de cobrança | Adiado deliberadamente; exige lidar com permissões e agendamento no Android. |
-| Múltiplas moedas | Só se houver necessidade real (uso internacional). |
-| Suporte a juros/correção monetária (opcional, configurável) | Manter fora do núcleo — se implementado, seria um módulo opt-in, nunca padrão. |
-| Múltiplos usuários / perfis no mesmo dispositivo | Baixa prioridade, não é o caso de uso principal. |
-| Anexar comprovante (foto) ao pagamento | Melhoria de UX, mas não essencial ao controle financeiro em si. |
-| Modo escuro (dark theme) | Melhoria de UX, candidata natural para logo após o v1.0. |
+| Sincronização em nuvem | Backup e múltiplos dispositivos. |
+| Backup/restauração manual | Evolução mais simples antes da sincronização completa. |
+| Exportação PDF/Excel | Útil, mas não essencial ao controle inicial. |
+| Notificações de cobrança | Exigem permissões e podem exigir development build; ficam fora do Expo Go/MVP. |
+| Múltiplas moedas | Somente diante de necessidade real. |
+| Juros/correção | Módulo opcional, nunca parte implícita do núcleo. |
+| Múltiplos perfis | Baixa prioridade para o caso de uso principal. |
+| Comprovante por foto | Melhoria posterior de UX. |
+| Modo escuro | Candidato natural após validação do MVP. |
+
+Qualquer funcionalidade que demande módulo nativo não incluído no Expo Go exige decisão explícita de migração para development build antes de ser planejada.

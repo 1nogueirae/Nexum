@@ -10,7 +10,7 @@ Na Roma Antiga, o *nexum* era um contrato pelo qual uma pessoa se comprometia (p
 
 ## Objetivo do Produto
 
-Nexum é um aplicativo Android para controle de **empréstimos pessoais de dinheiro** concedidos pelo usuário a outras pessoas (amigos, familiares, conhecidos). O app permite cadastrar pessoas, registrar empréstimos, lançar pagamentos (parciais ou totais) e acompanhar automaticamente o saldo devedor de cada empréstimo.
+Nexum é um aplicativo mobile, com foco inicial em Android, para controle de **empréstimos pessoais de dinheiro** concedidos pelo usuário a outras pessoas (amigos, familiares, conhecidos). O app permite cadastrar pessoas, registrar empréstimos, lançar pagamentos (parciais ou totais) e acompanhar automaticamente o saldo devedor de cada empréstimo.
 
 O produto nasce como **projeto pessoal de portfólio**, mas é desenhado com padrão de qualidade suficiente para uso real e contínuo no dia a dia do próprio autor.
 
@@ -63,9 +63,12 @@ Isso significa que funcionalidades "interessantes", mas não essenciais, devem s
 
 | Camada | Tecnologia |
 |---|---|
-| Framework | Flutter |
-| Linguagem | Dart |
-| Persistência local | Isar |
+| Framework | React Native com Expo |
+| Linguagem | TypeScript |
+| Ambiente de desenvolvimento inicial | Expo Go |
+| Navegação | Expo Router |
+| Persistência local | SQLite via `expo-sqlite` |
+| Gerenciamento de estado | Zustand |
 | Backend (MVP) | Nenhum |
 | Autenticação (MVP) | Nenhuma |
 | Sincronização | Fora do MVP, prevista para o futuro |
