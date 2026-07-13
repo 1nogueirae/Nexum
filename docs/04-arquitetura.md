@@ -102,7 +102,22 @@ Os nomes são um direcionamento, não arquivos a serem criados antecipadamente. 
 
 O Expo Router será usado por oferecer roteamento baseado em arquivos e integração direta com projetos Expo. Os arquivos de rota devem permanecer finos: recebem parâmetros, conectam dependências e renderizam componentes da camada Presentation.
 
-Os fluxos principais usarão navegação em pilha. Abas poderão ser usadas apenas onde já fazem parte da experiência definida, como a alternância entre empréstimos ativos e quitados.
+A navegação principal será composta por quatro abas persistentes no rodapé:
+
+| Aba | Arquivo de rota | Caminho |
+|---|---|---|
+| Início | `src/app/(tabs)/index.tsx` | `/` |
+| Pessoas | `src/app/(tabs)/pessoas.tsx` | `/pessoas` |
+| Ativos | `src/app/(tabs)/ativos.tsx` | `/ativos` |
+| Quitados | `src/app/(tabs)/quitados.tsx` | `/quitados` |
+
+O layout `src/app/(tabs)/_layout.tsx` registra essas quatro rotas no componente `Tabs` do Expo Router e conecta o componente visual do footer. O nome do grupo `(tabs)` organiza os arquivos, mas não faz parte do caminho público.
+
+Ao pressionar um item do footer, o navegador de abas seleciona a rota registrada com o mesmo nome. Por exemplo, o item **Pessoas** seleciona a rota `pessoas`, que corresponde ao arquivo `pessoas.tsx` e ao caminho `/pessoas`. O Expo Router então renderiza esse arquivo dentro do layout `(tabs)` e mantém o footer visível.
+
+Cada arquivo de rota apenas renderiza a screen correspondente da camada Presentation. A aparência do footer fica em `src/presentation/components/navigation/footer-navigator.tsx`; ela não define regras de negócio nem o conteúdo das telas.
+
+Telas secundárias, como detalhe e formulário, usam navegação em pilha sobre o layout das abas. Ao abrir uma dessas telas, ela é adicionada à pilha; ao voltar, o usuário retorna para a aba de origem. As quatro abas não devem empilhar cópias umas das outras quando o usuário alternar entre elas.
 
 ## Gerenciamento de estado
 

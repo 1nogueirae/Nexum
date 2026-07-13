@@ -8,16 +8,25 @@ Wireframes de baixa fidelidade, representando estrutura e hierarquia de informa�
 
 ```mermaid
 flowchart TD
-    Home["Home"] --> ListaPessoas["Lista de Pessoas"]
+    Footer["Footer Navigator"] --> Home["Início — /"]
+    Footer --> ListaPessoas["Pessoas — /pessoas"]
+    Footer --> Ativos["Ativos — /ativos"]
+    Footer --> Quitados["Quitados — /quitados"]
+
+    Home --> DetalheEmprestimo["Detalhe do Empréstimo"]
     ListaPessoas --> FormPessoa["Form Pessoa (criar/editar)"]
     ListaPessoas --> DetalhePessoa["Detalhe da Pessoa"]
+    Ativos --> DetalheEmprestimo
+    Quitados --> DetalheEmprestimo
     DetalhePessoa --> FormPessoa
     DetalhePessoa --> FormEmprestimo["Form Empréstimo (criar/editar)"]
-    DetalhePessoa --> DetalheEmprestimo["Detalhe do Empréstimo"]
+    DetalhePessoa --> DetalheEmprestimo
     DetalheEmprestimo --> FormEmprestimo
     DetalheEmprestimo --> FormPagamento["Form Pagamento"]
     DetalheEmprestimo --> DialogoQuitar["Diálogo: Quitar Empréstimo"]
 ```
+
+O footer permanece visível nas quatro rotas principais. Detalhes e formulários são abertos pela navegação em pilha e retornam à aba que os originou.
 
 ---
 
