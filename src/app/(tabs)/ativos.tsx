@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native'
 
-import { useTheme } from '../presentation/theme/theme-provider'
+import { useTheme } from '../../presentation/theme/theme-provider'
 
-export default function HomeRoute() {
+export default function ActivesRoute() {
   const theme = useTheme()
 
   return (
@@ -10,7 +10,7 @@ export default function HomeRoute() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <Text style={[theme.typography.title, { color: theme.colors.text }]}>
-        Nexum
+        Ativos
       </Text>
     </View>
   )
