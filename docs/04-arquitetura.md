@@ -2,27 +2,25 @@
 
 ## Visão geral
 
-Nexum será desenvolvido em **React Native com Expo e TypeScript**, usando o **Expo Go** durante o desenvolvimento inicial. A arquitetura em camadas é inspirada em Clean Architecture, simplificada para um aplicativo single-user, offline e mantido por uma única pessoa.
+Nexum é desenvolvido em **React Native com Expo e TypeScript**, usando o **Expo Go** durante o desenvolvimento inicial. A organização prioriza um fluxo fácil de acompanhar e cria abstrações somente quando uma necessidade concreta aparece.
 
 ```mermaid
 flowchart TD
-    ROUTES["Rotas — Expo Router"] --> UI["Presentation — componentes e estado de tela"]
-    UI --> APP["Application — casos de uso e serviços"]
-    APP --> DOM["Domain — entidades e regras"]
-    APP --> DATA["Data — repositórios e SQLite"]
-    DATA --> DOM
-    DATA --> SQLITE["expo-sqlite"]
+    ROUTE["Rota ou tela"] --> FEATURE["Função da funcionalidade"]
+    FEATURE --> DATABASE["Operações SQLite da funcionalidade"]
+    DATABASE --> SQLITE["expo-sqlite"]
+    ROUTE --> COMPONENT["Componente visual reutilizável"]
 ```
 
-| Camada | Responsabilidade |
+| Área | Responsabilidade |
 |---|---|
-| **Routes** | Arquivos do Expo Router. Compõem telas, parâmetros e layouts de navegação, sem regras de negócio. |
-| **Presentation** | Componentes React Native, formulários, feedback visual e stores de estado da interface. Não executa SQL. |
-| **Application** | Casos de uso e serviços que orquestram operações envolvendo uma ou mais entidades. |
-| **Domain** | Entidades, tipos e regras de negócio em TypeScript puro, sem dependências de React Native, Expo ou SQLite. |
-| **Data** | Repositórios, mapeadores, migrations e acesso ao banco por `expo-sqlite`. |
+| **App** | Rotas, layouts e estado local das telas. |
+| **Components** | Elementos visuais reutilizáveis por mais de uma tela ou layout. |
+| **Features** | Tipos, validações, ações e persistência de cada funcionalidade. |
+| **Database** | Inicialização da conexão, schema e migrations gerais. |
+| **Arquivos globais** | Tema e utilitários realmente compartilhados, como valores monetários. |
 
-Essa separação mantém as regras de negócio testáveis e permite trocar a persistência ou adicionar sincronização futura sem reescrever a interface.
+O objetivo não é manter cada responsabilidade em uma camada própria. O objetivo é conseguir seguir o caminho entre uma ação da tela e sua persistência sem atravessar arquivos que apenas repassam chamadas.
 
 ## Stack técnica
 
@@ -33,11 +31,11 @@ Essa separação mantém as regras de negócio testáveis e permite trocar a per
 | Ambiente inicial | Expo Go |
 | Navegação | Expo Router |
 | Persistência | `expo-sqlite` |
-| Estado de UI | Zustand, com stores pequenas por contexto |
+| Estado de UI | Hooks locais do React |
 | Testes | Jest, `jest-expo` e React Native Testing Library |
 | Build Android | EAS Build |
 
-As versões exatas serão definidas quando o projeto for inicializado, sempre usando versões compatíveis com o Expo SDK adotado. Dependências do Expo devem ser instaladas pelo comando recomendado pelo Expo para evitar incompatibilidades.
+Dependências do Expo devem ser instaladas pelo comando recomendado pelo framework para evitar incompatibilidades. Uma biblioteca de estado global só deve ser adicionada quando existir estado realmente compartilhado que não possa ser mantido de forma clara nas telas.
 
 ## Limite de compatibilidade com Expo Go
 
@@ -46,63 +44,36 @@ Durante o MVP:
 - só podem ser adotadas bibliotecas incluídas no Expo SDK ou implementadas apenas em JavaScript/TypeScript;
 - não haverá edição manual de código nativo nem manutenção das pastas `android/` e `ios/`;
 - toda nova dependência deve ser verificada quanto à compatibilidade com o Expo Go antes de entrar no projeto;
-- se uma necessidade futura exigir código nativo ausente no Expo Go, a migração para um development build deverá ser registrada como nova decisão arquitetural.
+- uma necessidade que exija código nativo ausente no Expo Go demanda uma nova decisão arquitetural.
 
 O Expo Go é o cliente de desenvolvimento, não o artefato distribuído ao usuário. Builds instaláveis e de produção serão gerados com EAS Build.
 
-## Organização planejada de pastas
+## Organização de pastas
 
 ```text
 src/
-├── app/                         # somente rotas e layouts do Expo Router
+├── app/                         # rotas e layouts do Expo Router
 │   ├── _layout.tsx
-│   ├── index.tsx
-│   ├── people/
-│   └── loans/
-├── domain/
-│   ├── entities/
-│   │   ├── person.ts
-│   │   ├── loan.ts
-│   │   └── payment.ts
-│   └── value-objects/
-│       └── money.ts
-├── application/
-│   ├── use-cases/
-│   │   ├── people/
-│   │   ├── loans/
-│   │   └── payments/
-│   └── services/
-│       └── outstanding-balance-service.ts
-├── data/
-│   ├── database/
-│   │   ├── connection.ts
-│   │   ├── migrations/
-│   │   └── schema.ts
-│   ├── mappers/
-│   └── repositories/
-├── presentation/
-│   ├── features/
-│   │   ├── home/
-│   │   ├── people/
-│   │   ├── loans/
-│   │   └── payments/
-│   ├── components/
-│   ├── hooks/
-│   ├── stores/
-│   └── theme/
-└── shared/
-    ├── errors/
-    ├── formatters/
-    └── utils/
+│   └── (tabs)/
+├── components/                  # componentes visuais reutilizáveis
+│   └── FooterNavigator.tsx
+├── database/                    # configuração geral do SQLite
+│   ├── connection.ts
+│   ├── migrations/
+│   └── schema.ts
+├── features/                    # funcionalidades que já existem
+│   └── people/
+│       ├── people.ts            # tipos, validações e ações públicas
+│       └── people-database.ts   # consultas e comandos SQL
+├── money.ts                     # valores monetários compartilhados
+└── theme.ts                     # cores, tipografia e espaçamento
 ```
 
-Os nomes são um direcionamento, não arquivos a serem criados antecipadamente. `src/app/` permanece reservado a rotas; componentes e lógica reutilizável ficam fora dele.
+Pastas e arquivos não devem ser criados para funcionalidades futuras. Quando empréstimos e pagamentos começarem a ser implementados, cada um recebe sua pasta em `features/` somente se precisar de regras ou persistência próprias.
 
 ## Navegação
 
-O Expo Router será usado por oferecer roteamento baseado em arquivos e integração direta com projetos Expo. Os arquivos de rota devem permanecer finos: recebem parâmetros, conectam dependências e renderizam componentes da camada Presentation.
-
-A navegação principal será composta por quatro abas persistentes no rodapé:
+O Expo Router oferece roteamento baseado em arquivos. A navegação principal possui quatro abas persistentes no rodapé:
 
 | Aba | Arquivo de rota | Caminho |
 |---|---|---|
@@ -111,50 +82,63 @@ A navegação principal será composta por quatro abas persistentes no rodapé:
 | Ativos | `src/app/(tabs)/ativos.tsx` | `/ativos` |
 | Quitados | `src/app/(tabs)/quitados.tsx` | `/quitados` |
 
-O layout `src/app/(tabs)/_layout.tsx` registra essas quatro rotas no componente `Tabs` do Expo Router e conecta o componente visual do footer. O nome do grupo `(tabs)` organiza os arquivos, mas não faz parte do caminho público.
+O layout `src/app/(tabs)/_layout.tsx` registra as rotas, define títulos e ícones e entrega as propriedades de navegação ao `src/components/FooterNavigator.tsx`. O footer controla somente a aparência e a interação dos botões; cada arquivo em `(tabs)` controla o conteúdo da aba correspondente.
 
-Ao pressionar um item do footer, o navegador de abas seleciona a rota registrada com o mesmo nome. Por exemplo, o item **Pessoas** seleciona a rota `pessoas`, que corresponde ao arquivo `pessoas.tsx` e ao caminho `/pessoas`. O Expo Router então renderiza esse arquivo dentro do layout `(tabs)` e mantém o footer visível.
+Telas secundárias, como detalhe e formulário, usam navegação em pilha sobre o layout das abas. Ao voltar, o usuário retorna para a aba de origem.
 
-Cada arquivo de rota apenas renderiza a screen correspondente da camada Presentation. A aparência do footer fica em `src/presentation/components/navigation/footer-navigator.tsx`; ela não define regras de negócio nem o conteúdo das telas.
+## Estado da interface
 
-Telas secundárias, como detalhe e formulário, usam navegação em pilha sobre o layout das abas. Ao abrir uma dessas telas, ela é adicionada à pilha; ao voltar, o usuário retorna para a aba de origem. As quatro abas não devem empilhar cópias umas das outras quando o usuário alternar entre elas.
+Estado temporário pertence à tela ou ao componente que o utiliza:
 
-## Gerenciamento de estado
+- `useState` para campos, filtros, carregamento e mensagens de erro;
+- `useEffect` para carregar dados quando a tela precisar;
+- valores calculados diretamente durante a renderização ou com `useMemo` quando houver custo relevante.
 
-Zustand será usado apenas para estado compartilhado de interface e coordenação assíncrona entre telas. Estado local de formulário ou componente continua em hooks locais quando não precisa ser compartilhado.
+Context ou biblioteca de estado global não devem ser adicionados apenas para antecipar compartilhamento futuro. Caso duas telas passem a precisar do mesmo estado em memória, a necessidade deve ser reavaliada com exemplos concretos antes de escolher uma solução.
 
-Regras:
+## Funcionalidades e persistência
 
-- uma store pequena por contexto de negócio, evitando uma store global monolítica;
-- stores chamam casos de uso, nunca executam SQL diretamente;
-- dados derivados, como saldo devedor, continuam sob responsabilidade do domínio/aplicação;
-- acesso por seletores para limitar renderizações desnecessárias;
-- dependências são montadas em um ponto de composição, sem service locator acessível pelo domínio.
+Cada pasta em `features/` expõe as operações que a tela pode executar. Na funcionalidade de pessoas:
 
-## Persistência
+- `people.ts` define `Person`, entradas, resultados, validações e funções como `listPeople`, `createPerson`, `updatePerson` e `deletePerson`;
+- `people-database.ts` contém SQL, conversão de linhas e consultas auxiliares;
+- a tela obtém a conexão usando `useSQLiteContext()` e chama a função pública necessária.
 
-`expo-sqlite` será a persistência local porque funciona no Expo Go, mantém o banco entre reinicializações e oferece transações e integridade relacional adequadas ao domínio.
+Exemplo de fluxo:
 
-As operações compostas — pagamento com atualização de status e exclusões em cascata — devem ser atômicas. Foreign keys serão habilitadas na inicialização, migrations serão versionadas e detalhes do schema ficam em `09-banco.md`.
+```text
+PeopleRoute
+  → listPeople(database)
+    → listPersonRows(database)
+      → SQLite
+```
 
-## Padrões utilizados
+O arquivo de SQL não contém estado visual. A tela não escreve SQL diretamente. Essa divisão mantém duas responsabilidades concretas sem introduzir interfaces, classes ou Providers intermediários.
 
-| Padrão | Aplicação |
+## Banco de dados
+
+`expo-sqlite` mantém os dados entre reinicializações e oferece transações e integridade relacional. O `SQLiteProvider`, em `src/app/_layout.tsx`, inicializa a conexão e executa as migrations antes de liberar o aplicativo.
+
+Operações compostas, como pagamento com atualização de status, devem permanecer atômicas. Foreign keys são habilitadas na inicialização, migrations são versionadas e os detalhes do schema ficam em `09-banco.md`.
+
+## Práticas mantidas
+
+| Prática | Aplicação |
 |---|---|
-| Repository | Isola os casos de uso dos detalhes de SQLite. |
-| Use Case | Mantém cada ação de negócio explícita e testável. |
-| Value Object `Money` | Centraliza valores inteiros em centavos e impede operações inválidas. |
-| Result discriminado | Representa sucesso e falhas esperadas sem exceptions genéricas na UI. |
-| Mapper | Converte linhas do banco em entidades de domínio. |
-| Migrations versionadas | Permitem evoluir o schema sem perda de dados. |
+| TypeScript estrito | Detecta incompatibilidades de tipos durante o desenvolvimento. |
+| `Money` | Mantém valores inteiros em centavos e centraliza formatação monetária. |
+| Resultados discriminados | Representam sucesso e falhas esperadas de validação. |
+| Migrations versionadas | Permitem evoluir o schema sem apagar dados existentes. |
+| Funções pequenas | Tornam explícito o caminho entre regra e persistência. |
 
-## Regras de dependência
+## Regras de organização
 
-1. Domain não importa React, React Native, Expo, Zustand nem `expo-sqlite`.
-2. Application depende de Domain e de contratos mínimos necessários aos casos de uso.
-3. Data implementa a persistência e conhece Application/Domain, nunca Presentation.
-4. Presentation conhece casos de uso e tipos de Domain, mas não conhece SQL.
-5. Routes conhecem navegação e Presentation; não contêm regras de negócio.
+1. Rotas e layouts ficam em `src/app/` porque o Expo Router depende dessa convenção.
+2. Componentes vão para `src/components/` quando forem reutilizados ou fizerem parte da estrutura visual global.
+3. Código específico de uma funcionalidade fica junto em `src/features/<nome>/`.
+4. SQL específico de uma funcionalidade fica no arquivo `<nome>-database.ts` dessa funcionalidade.
+5. Configuração geral do SQLite fica em `src/database/`.
+6. Novas abstrações e pastas exigem um uso concreto no código atual.
 
 ## Referências oficiais
 

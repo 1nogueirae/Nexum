@@ -74,7 +74,7 @@ O campo `loans.status` é um cache de consulta. Na mesma transação que cria ou
 3. define `paid` quando o saldo é zero e `active` nos demais casos;
 4. atualiza `updated_at`.
 
-O `OutstandingBalanceService` centraliza esse processo. Nenhuma tela altera `status` diretamente.
+A função de persistência responsável por pagamentos centraliza esse processo. Nenhuma tela altera `status` diretamente.
 
 ## Atomicidade
 
@@ -89,7 +89,7 @@ As cascatas são garantidas pelas foreign keys. Se qualquer etapa falhar, toda a
 
 ## Atualização da interface
 
-SQLite não é tratado como store de UI. Depois de um commit bem-sucedido, o caso de uso solicita a recarga das consultas afetadas nas stores Zustand. Isso mantém a reatividade explícita e evita que telas conheçam o mecanismo de persistência.
+SQLite não é tratado como estado da interface. Depois de uma escrita bem-sucedida, a tela recarrega os dados afetados por meio das funções da funcionalidade correspondente. Estado temporário, como carregamento, erro e texto de busca, permanece em hooks locais.
 
 ## Migrations
 
@@ -101,7 +101,7 @@ SQLite não é tratado como store de UI. Depois de um commit bem-sucedido, o cas
 
 ## Integridade adicional
 
-As restrições simples ficam no schema, mas regras que dependem de agregações — como impedir pagamentos acima do saldo — são validadas pelo caso de uso dentro da mesma transação da escrita.
+As restrições simples ficam no schema, mas regras que dependem de agregações — como impedir pagamentos acima do saldo — são validadas pela função da funcionalidade dentro da mesma transação da escrita.
 
 ## Preparação para sincronização futura
 

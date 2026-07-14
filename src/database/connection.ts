@@ -40,10 +40,6 @@ export function initializeDatabaseAsync(database: SQLiteDatabase) {
   return initialization
 }
 
-/**
- * Runs a composed database operation on a private connection and acquires the
- * write lock before invoking it. Throwing from the task rolls every change back.
- */
 export async function withExclusiveDatabaseTransactionAsync<T>(
   task: (transaction: SQLiteDatabase) => Promise<T>,
 ): Promise<T> {
