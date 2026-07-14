@@ -7,8 +7,7 @@ import { createAppDependencies } from '../composition/create-app-dependencies'
 import { initializeDatabaseAsync } from '../data/database/connection'
 import { DATABASE_NAME } from '../data/database/schema'
 import { AppDependenciesProvider } from '../presentation/providers/app-dependencies-provider'
-import { ThemeProvider } from '../presentation/theme/theme-provider'
-import { theme } from '../presentation/theme/theme'
+import { theme } from '../theme'
 
 function AppContent() {
   const database = useSQLiteContext()
@@ -19,17 +18,15 @@ function AppContent() {
 
   return (
     <AppDependenciesProvider dependencies={dependencies}>
-      <ThemeProvider>
-        <StatusBar style="light" />
-        <Stack
-          screenOptions={{
-            contentStyle: { backgroundColor: theme.colors.background },
-            headerStyle: { backgroundColor: theme.colors.primaryDark },
-            headerTintColor: theme.colors.surface,
-            headerTitleStyle: theme.typography.title,
-          }}
-        />
-      </ThemeProvider>
+      <StatusBar style="light" />
+      <Stack
+        screenOptions={{
+          contentStyle: { backgroundColor: theme.colors.background },
+          headerStyle: { backgroundColor: theme.colors.primaryDark },
+          headerTintColor: theme.colors.surface,
+          headerTitleStyle: theme.typography.title,
+        }}
+      />
     </AppDependenciesProvider>
   )
 }

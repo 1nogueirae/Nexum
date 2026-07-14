@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router'
 import { MaterialIcons } from '@expo/vector-icons'
 
-import { FooterNavigator } from '../../presentation/components/navigation/footer-navigator'
+import { FooterNavigator } from '../../components/FooterNavigator'
 
 export default function TabsLayout() {
     return (

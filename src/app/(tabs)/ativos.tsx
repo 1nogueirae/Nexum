@@ -1,10 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native'
 
-import { useTheme } from '../../presentation/theme/theme-provider'
+import { theme } from '../../theme'
 
 export default function ActivesRoute() {
-  const theme = useTheme()
-
   return (
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
