@@ -3,13 +3,30 @@ import { MaterialIcons } from '@expo/vector-icons'
 
 import { FooterNavigator } from '../../components/FooterNavigator'
 
+import { theme } from '../../theme'
+
 export default function TabsLayout() {
     return (
-        <Tabs tabBar={(props) => <FooterNavigator {...props} />}>
+        <Tabs
+            screenOptions={{
+                headerShown: true,
+                headerStyle: {
+                    backgroundColor: theme.colors.primaryDark,
+                },
+                headerTintColor: theme.colors.surface,
+                headerTitleStyle: {
+                    ...theme.typography.display,
+                    color: theme.colors.surface,
+                },
+                headerTitleAlign: 'left',
+                headerShadowVisible: false,
+            }}
+            tabBar={(props) => <FooterNavigator {...props} />}
+        >
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: 'Início',
+                    title: 'Nexum',
                     tabBarIcon: ({ color, size }) => (
                         <MaterialIcons name="home" size={size} color={color} />
                     ),
