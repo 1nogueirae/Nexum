@@ -3,6 +3,7 @@ import type { TextStyle, ViewStyle } from 'react-native'
 const colors = {
   primary: '#2F6F5E',
   primaryDark: '#1F4E42',
+  primaryLight: '#EAF3F0',
   background: '#F7F7F5',
   surface: '#FFFFFF',
   text: '#1C1C1C',
@@ -23,6 +24,8 @@ const spacing = {
 const radii = {
   button: 8,
   card: 12,
+  cardGroup: 18,
+  avatar: 21,
 } as const
 
 const typography = {
@@ -30,31 +33,37 @@ const typography = {
     fontSize: 28,
     fontWeight: '700',
     lineHeight: 34,
+    color: colors.text,
   },
   title: {
     fontSize: 20,
     fontWeight: '600',
     lineHeight: 26,
+    color: colors.text,
   },
   subtitle: {
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 22,
+    color: colors.text,
   },
   body: {
     fontSize: 14,
     fontWeight: '400',
     lineHeight: 20,
+    color: colors.text,
   },
   caption: {
     fontSize: 12,
     fontWeight: '400',
     lineHeight: 16,
+    color: colors.textSecondary,
   },
   money: {
     fontSize: 16,
     fontWeight: '600',
     lineHeight: 22,
+    color: colors.text,
   },
 } as const satisfies Record<string, TextStyle>
 

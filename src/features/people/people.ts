@@ -25,6 +25,10 @@ export interface PersonDeletionImpact {
   outstandingBalance: Money
 }
 
+export interface PersonListItem extends Person {
+  outstandingBalance: Money
+}
+
 export interface CreatePersonInput {
   name: string
   phone?: string | null
@@ -56,14 +60,32 @@ export type DeletePersonResult =
   | { success: true; person: Person }
   | { success: false; reason: 'person_not_found' }
   | {
-      success: false
-      reason: 'confirmation_required'
-      person: Person
-      impact: PersonDeletionImpact
-    }
+    success: false
+    reason: 'confirmation_required'
+    person: Person
+    impact: PersonDeletionImpact
+  }
 
 export function listPeople(database: SQLiteDatabase) {
   return listPersonRows(database)
+}
+
+export async function findPerson(
+  database: SQLiteDatabase,
+  id: string,
+): Promise<PersonListItem | null> {
+  const person = await findPersonById(database, id)
+
+  if (!person) {
+    return null
+  }
+
+  const { outstandingBalance } = await getPersonDeletionImpact(database, id)
+
+  return {
+    ...person,
+    outstandingBalance,
+  }
 }
 
 export async function createPerson(

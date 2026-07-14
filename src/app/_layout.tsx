@@ -12,15 +12,34 @@ export default function RootLayout() {
       databaseName={DATABASE_NAME}
       onInit={initializeDatabaseAsync}
     >
-      <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          contentStyle: { backgroundColor: theme.colors.background },
-          headerStyle: { backgroundColor: theme.colors.primaryDark },
-          headerTintColor: theme.colors.surface,
-          headerTitleStyle: theme.typography.title,
-        }}
-      />
+      <>
+        <StatusBar style="light" />
+        <Stack
+          screenOptions={{
+            contentStyle: { backgroundColor: theme.colors.background },
+            headerStyle: { backgroundColor: theme.colors.primaryDark },
+            headerTintColor: theme.colors.surface,
+            headerTitleStyle: {
+              ...theme.typography.title,
+              color: theme.colors.surface,
+            },
+          }}
+        >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="pessoa_detalhes"
+            options={({ route }) => {
+              const params = route.params as { name?: unknown } | undefined
+              return {
+                title:
+                  typeof params?.name === 'string'
+                    ? params.name
+                    : 'Detalhes da pessoa',
+              }
+            }}
+          />
+        </Stack>
+      </>
     </SQLiteProvider>
   )
 }

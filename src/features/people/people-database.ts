@@ -2,7 +2,11 @@ import type { SQLiteDatabase } from 'expo-sqlite'
 
 import { Money } from '../../money'
 import { TABLE_NAMES, type PersonRow } from '../../database/schema'
-import type { Person, PersonDeletionImpact } from './people'
+import type { Person, PersonDeletionImpact, PersonListItem } from './people'
+
+type PersonListRow = PersonRow & {
+  outstanding_balance: number
+}
 
 function mapPersonRow(row: PersonRow): Person {
   return {
@@ -15,12 +19,39 @@ function mapPersonRow(row: PersonRow): Person {
   }
 }
 
-export async function listPersonRows(database: SQLiteDatabase) {
-  const rows = await database.getAllAsync<PersonRow>(
-    `SELECT * FROM ${TABLE_NAMES.people} ORDER BY name COLLATE NOCASE`,
+export async function listPersonRows(
+  database: SQLiteDatabase,
+): Promise<PersonListItem[]> {
+  const rows = await database.getAllAsync<PersonListRow>(
+    `SELECT
+      p.*,
+      COALESCE(SUM(active_loans.outstanding_balance), 0)
+        AS outstanding_balance
+    FROM ${TABLE_NAMES.people} p
+    LEFT JOIN (
+      SELECT
+        l.id,
+        l.person_id,
+        l.amount_in_cents - COALESCE(SUM(pay.amount_in_cents), 0)
+          AS outstanding_balance
+      FROM ${TABLE_NAMES.loans} l
+      LEFT JOIN ${TABLE_NAMES.payments} pay
+        ON pay.loan_id = l.id
+      WHERE l.status = 'active'
+      GROUP BY
+        l.id,
+        l.person_id,
+        l.amount_in_cents
+    ) active_loans
+      ON active_loans.person_id = p.id
+    GROUP BY p.id
+    ORDER BY p.name COLLATE NOCASE`,
   )
 
-  return rows.map(mapPersonRow)
+  return rows.map((row) => ({
+    ...mapPersonRow(row),
+    outstandingBalance: Money.fromCents(row.outstanding_balance),
+  }))
 }
 
 export async function findPersonById(
