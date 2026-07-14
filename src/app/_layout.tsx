@@ -1,23 +1,17 @@
-import { useMemo } from 'react'
 import { Stack } from 'expo-router'
-import { SQLiteProvider, useSQLiteContext } from 'expo-sqlite'
+import { SQLiteProvider } from 'expo-sqlite'
 import { StatusBar } from 'expo-status-bar'
 
-import { createAppDependencies } from '../composition/create-app-dependencies'
-import { initializeDatabaseAsync } from '../data/database/connection'
-import { DATABASE_NAME } from '../data/database/schema'
-import { AppDependenciesProvider } from '../presentation/providers/app-dependencies-provider'
+import { initializeDatabaseAsync } from '../database/connection'
+import { DATABASE_NAME } from '../database/schema'
 import { theme } from '../theme'
 
-function AppContent() {
-  const database = useSQLiteContext()
-  const dependencies = useMemo(
-    () => createAppDependencies(database),
-    [database],
-  )
-
+export default function RootLayout() {
   return (
-    <AppDependenciesProvider dependencies={dependencies}>
+    <SQLiteProvider
+      databaseName={DATABASE_NAME}
+      onInit={initializeDatabaseAsync}
+    >
       <StatusBar style="light" />
       <Stack
         screenOptions={{
@@ -27,17 +21,6 @@ function AppContent() {
           headerTitleStyle: theme.typography.title,
         }}
       />
-    </AppDependenciesProvider>
-  )
-}
-
-export default function RootLayout() {
-  return (
-    <SQLiteProvider
-      databaseName={DATABASE_NAME}
-      onInit={initializeDatabaseAsync}
-    >
-      <AppContent />
     </SQLiteProvider>
   )
 }

@@ -8,8 +8,8 @@ O roadmap entrega incrementos pequenos e coesos. Nenhuma funcionalidade pós-MVP
 - Confirmar execução em dispositivo Android pelo Expo Go.
 - Configurar Expo Router e a estrutura definida em `04-arquitetura.md`.
 - Configurar `expo-sqlite`, migrations e schema inicial de Person, Loan e Payment.
-- Criar o ponto de composição das dependências e as stores Zustand iniciais.
-- Configurar lint, formatação e testes com Jest/`jest-expo`.
+- Organizar componentes, banco e funcionalidades em pastas de responsabilidade direta.
+- Configurar ESLint, TypeScript estrito e testes com Jest/`jest-expo`.
 - Aplicar tokens básicos de cor, tipografia e espaçamento.
 
 ## v0.2 — Cadastro de Pessoas
@@ -51,8 +51,8 @@ O roadmap entrega incrementos pequenos e coesos. Nenhuma funcionalidade pós-MVP
 
 ## v0.8 — Qualidade e testes
 
-- Testes unitários do domínio.
-- Testes de integração dos casos de uso e repositórios SQLite.
+- Testes unitários das regras das funcionalidades.
+- Testes de integração das funções de acesso ao SQLite.
 - Testes de componentes com React Native Testing Library.
 - Validação de performance com massa local simulada.
 

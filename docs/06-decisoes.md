@@ -46,7 +46,7 @@ Este documento registra as decisões vigentes do Nexum. Decisões substituídas 
 
 **Decisão:** usar rotas baseadas em arquivos com Expo Router.
 
-**Consequência:** `src/app/` contém apenas rotas e layouts; componentes e regras ficam nas demais camadas.
+**Consequência:** `src/app/` contém rotas e layouts; componentes reutilizáveis e regras ficam fora dessa pasta.
 
 ## D08 — Persistência local com `expo-sqlite`
 
@@ -56,21 +56,21 @@ Este documento registra as decisões vigentes do Nexum. Decisões substituídas 
 
 **Alternativas consideradas:** armazenamento chave-valor; ORM ou banco que exija módulo nativo adicional.
 
-**Consequências:** relacionamentos e cascatas são expressos pelo schema; consultas reativas são coordenadas pela aplicação após commits; migrations passam a ser responsabilidade explícita do projeto.
+**Consequências:** relacionamentos e cascatas são expressos pelo schema; a interface recarrega os dados afetados após escritas; migrations passam a ser responsabilidade explícita do projeto.
 
-## D09 — Estado de interface com Zustand
+## D09 — Estado local antes de estado global
 
-**Decisão:** usar Zustand para estado compartilhado de tela e coordenação assíncrona, preservando hooks locais para estado não compartilhado.
+**Decisão:** usar hooks do React para o estado das telas e componentes. Uma biblioteca de estado compartilhado só será adicionada quando uma necessidade concreta não puder ser atendida de forma simples.
 
-**Alternativas consideradas:** somente Context API; Redux Toolkit.
+**Alternativas consideradas:** Zustand; Context API; Redux Toolkit.
 
-**Consequência:** stores permanecem pequenas, segmentadas e sem acesso direto ao SQLite.
+**Consequência:** o projeto não mantém stores, Providers ou hooks globais antecipadamente.
 
-## D10 — Arquitetura em camadas simplificada
+## D10 — Organização por funcionalidades
 
-**Decisão:** separar Routes / Presentation / Application / Domain / Data sem criar abstrações sem uso concreto.
+**Decisão:** organizar o código em rotas, componentes, banco e funcionalidades. Cada funcionalidade separa suas regras públicas do SQL quando ambos existirem.
 
-**Consequência:** regras de negócio não dependem de React Native ou Expo e podem ser testadas isoladamente.
+**Consequência:** o fluxo entre tela, regra e persistência fica visível, e novas pastas ou abstrações só são criadas quando resolvem um problema existente.
 
 ## D11 — Valores monetários como inteiros em centavos
 
@@ -82,7 +82,7 @@ Este documento registra as decisões vigentes do Nexum. Decisões substituídas 
 
 **Decisão:** o saldo é calculado pelos pagamentos; `status` é um cache transacional para consultas rápidas.
 
-**Consequência:** toda escrita que afete o saldo deve atualizar o status na mesma transação SQLite. O serviço central é o `OutstandingBalanceService`.
+**Consequência:** toda escrita que afete o saldo deve atualizar o status na mesma transação SQLite. A função responsável será criada junto da funcionalidade de empréstimos.
 
 ## D13 — Exclusão em cascata
 
@@ -94,4 +94,4 @@ Este documento registra as decisões vigentes do Nexum. Decisões substituídas 
 
 **Decisão:** usar Jest com `jest-expo` para unidades e React Native Testing Library para componentes.
 
-**Consequência:** o domínio continua testável sem runtime nativo, e a UI é verificada pelo comportamento percebido pelo usuário.
+**Consequência:** regras em TypeScript podem ser testadas isoladamente, e a UI é verificada pelo comportamento percebido pelo usuário.

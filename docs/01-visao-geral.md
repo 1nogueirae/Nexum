@@ -68,7 +68,7 @@ Isso significa que funcionalidades "interessantes", mas não essenciais, devem s
 | Ambiente de desenvolvimento inicial | Expo Go |
 | Navegação | Expo Router |
 | Persistência local | SQLite via `expo-sqlite` |
-| Gerenciamento de estado | Zustand |
+| Gerenciamento de estado | Hooks locais do React, adicionando solução compartilhada somente quando necessário |
 | Backend (MVP) | Nenhum |
 | Autenticação (MVP) | Nenhuma |
 | Sincronização | Fora do MVP, prevista para o futuro |
