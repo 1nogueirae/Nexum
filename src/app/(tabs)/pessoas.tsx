@@ -64,11 +64,12 @@ export default function PeopleRoute() {
     }
 
     return (
-        <View style={[styles.container]}>
-            <View style={{ gap: theme.spacing.sm }}>
+        <View style={styles.container}>
+            <View style={styles.content}>
                 <Text style={theme.typography.caption}>{people.length} pessoas</Text>
                 <FlatList
                     style={styles.cardGroup}
+                    showsVerticalScrollIndicator={false}
                     data={people}
                     keyExtractor={(item) => item.id}
                     ListEmptyComponent={
@@ -99,17 +100,19 @@ export default function PeopleRoute() {
 
 const styles = StyleSheet.create({
     container: {
-        alignItems: 'center',
         flex: 1,
-        justifyContent: 'flex-start',
         backgroundColor: theme.colors.background,
     },
+    content: {
+        flex: 1,
+        paddingHorizontal: theme.spacing.md,
+        paddingTop: theme.spacing.md,
+        gap: theme.spacing.sm,
+    },
     cardGroup: {
+        flexGrow: 0,
         backgroundColor: theme.colors.surface,
         borderRadius: theme.radii.cardGroup,
         overflow: 'hidden',
-        minWidth: '90%',
-        borderBottomWidth: 1,
-        borderBottomColor: theme.colors.divider,
     }
 })
