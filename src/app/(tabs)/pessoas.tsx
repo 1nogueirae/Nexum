@@ -72,7 +72,7 @@ export default function PeopleRoute() {
                     data={people}
                     keyExtractor={(item) => item.id}
                     ListEmptyComponent={
-                        <Text style={theme.typography.body}>
+                        <Text style={[theme.typography.body, { textAlign: 'center', paddingVertical: theme.spacing.lg, paddingHorizontal: theme.spacing.md }]}>
                             Nenhuma pessoa cadastrada.
                         </Text>
                     }
