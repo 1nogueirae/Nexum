@@ -75,6 +75,13 @@ const shadows = {
     shadowOpacity: 0.08,
     shadowRadius: 3,
   },
+  fab: {
+    elevation: 4,
+    shadowColor: '#000000',
+    shadowOffset: { height: 2, width: 0 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+  }
 } as const satisfies Record<string, ViewStyle>
 
 export const theme = {
