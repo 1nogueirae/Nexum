@@ -11,6 +11,7 @@ const colors = {
   success: '#3E8E5A',
   error: '#B3261E',
   divider: '#E3E3E0',
+  overlay: 'rgba(0, 0, 0, 0.5)',
 } as const
 
 const spacing = {
@@ -75,6 +76,13 @@ const shadows = {
     shadowOpacity: 0.08,
     shadowRadius: 3,
   },
+  fab: {
+    elevation: 4,
+    shadowColor: '#000000',
+    shadowOffset: { height: 2, width: 0 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+  }
 } as const satisfies Record<string, ViewStyle>
 
 export const theme = {

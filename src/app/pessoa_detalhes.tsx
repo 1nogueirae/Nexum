@@ -1,4 +1,5 @@
-import { Text, View, StyleSheet } from 'react-native'
+import { Text, View, StyleSheet, TouchableOpacity } from 'react-native'
+import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 
 import { useSQLiteContext } from 'expo-sqlite'
 
@@ -10,6 +11,7 @@ import { useCallback, useState } from 'react'
 import { theme } from '../theme'
 
 import { Avatar } from '../components/Avatar'
+import { PersonFormModal } from '../components/PersonFormModal'
 
 export default function PersonDetailsRoute() {
 
@@ -21,27 +23,44 @@ export default function PersonDetailsRoute() {
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<Error | null>(null)
 
+    const [showEditModal, setShowEditModal] = useState(false)
     const [page, setPage] = useState<'about' | 'actives' | 'paids'>('about')
+
+    const fetchPersonDetails = useCallback(async () => {
+        if (!id) return
+        try {
+            setIsLoading(true)
+            setError(null)
+
+            const personData = await findPerson(database, id)
+
+            setPerson(personData)
+        } catch (err) {
+            setError(err as Error)
+        } finally {
+            setIsLoading(false)
+        }
+    }, [database, id])
 
     useFocusEffect(
         useCallback(() => {
             let isActive = true
 
-            const fetchPeople = async () => {
+            const loadData = async () => {
                 try {
                     setIsLoading(true)
                     setError(null)
 
-                    const person = await findPerson(database, id)
+                    const personData = await findPerson(database, id)
 
-                    if (isActive) setPerson(person)
+                    if (isActive) setPerson(personData)
                 } catch (err) {
                     if (isActive) setError(err as Error)
                 } finally {
                     if (isActive) setIsLoading(false)
                 }
             }
-            fetchPeople()
+            loadData()
             return () => {
                 isActive = false
             }
@@ -83,7 +102,7 @@ export default function PersonDetailsRoute() {
 
                 <View style={styles.header_content}>
                     <Avatar person={person} size={70} />
-                    <View >
+                    <View style={{ flex: 1 }}>
                         <Text style={theme.typography.subtitle}>
                             Saldo devedor total:
                         </Text>
@@ -91,6 +110,12 @@ export default function PersonDetailsRoute() {
                             {person.outstandingBalance.format()}
                         </Text>
                     </View>
+                    <TouchableOpacity
+                        onPress={() => setShowEditModal(true)}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                        <MaterialIcons name="edit" size={24} color={theme.colors.textSecondary} />
+                    </TouchableOpacity>
                 </View>
 
                 <View style={styles.header_tabs}>
@@ -152,6 +177,15 @@ export default function PersonDetailsRoute() {
                     <Text>Construindo...</Text>
                 )}
             </View>
+
+            {showEditModal && (
+                <PersonFormModal
+                    showForm={showEditModal}
+                    setShowForm={setShowEditModal}
+                    editingPerson={person}
+                    onSuccess={fetchPersonDetails}
+                />
+            )}
 
         </View>
     )
