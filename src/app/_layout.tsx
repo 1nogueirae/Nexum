@@ -38,6 +38,18 @@ export default function RootLayout() {
               }
             }}
           />
+          <Stack.Screen
+            name="emprestimos/novo"
+            options={{ title: 'Novo Empréstimo' }}
+          />
+          <Stack.Screen
+            name="novo_emprestimo"
+            options={{ title: 'Novo Empréstimo' }}
+          />
+          <Stack.Screen
+            name="emprestimos/[id]/editar"
+            options={{ title: 'Editar Empréstimo' }}
+          />
         </Stack>
       </>
     </SQLiteProvider>
