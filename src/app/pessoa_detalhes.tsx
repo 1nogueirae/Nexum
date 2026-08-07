@@ -3,19 +3,21 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 
 import { useSQLiteContext } from 'expo-sqlite'
 
-import { findPerson, type PersonListItem } from '../features/people/people'
+import { findPerson, type PersonListItem, deletePerson } from '../features/people/people'
 
-import { useLocalSearchParams, useFocusEffect } from 'expo-router'
+import { useLocalSearchParams, useFocusEffect, useRouter } from 'expo-router'
 import { useCallback, useState } from 'react'
 
 import { theme } from '../theme'
 
 import { Avatar } from '../components/Avatar'
 import { PersonFormModal } from '../components/PersonFormModal'
+import { ConfirmModal } from '../components/ConfirmModal'
 
 export default function PersonDetailsRoute() {
 
     const { id } = useLocalSearchParams<{ id: string }>()
+    const router = useRouter()
 
     const database = useSQLiteContext()
 
@@ -25,6 +27,11 @@ export default function PersonDetailsRoute() {
 
     const [showEditModal, setShowEditModal] = useState(false)
     const [page, setPage] = useState<'about' | 'actives' | 'paids'>('about')
+
+    const [deleteConfirmation, setDeleteConfirmation] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false)
+    const [deleteMessage, setDeleteMessage] = useState('')
+    const [deleteError, setDeleteError] = useState<string | null>(null)
 
     const fetchPersonDetails = useCallback(async () => {
         if (!id) return
@@ -66,6 +73,61 @@ export default function PersonDetailsRoute() {
             }
         }, [database, id])
     )
+
+    const handleRequestDelete = async () => {
+        if (!person) return
+        try {
+            setIsDeleting(true)
+            setDeleteError(null)
+
+            const result = await deletePerson(database, { id: person.id, confirmDeletion: false })
+
+            if (!result.success) {
+                if (result.reason === 'confirmation_required') {
+                    const { impact } = result
+                    if (impact.activeLoanCount > 0) {
+                        const loanText =
+                            impact.activeLoanCount === 1
+                                ? '1 empréstimo ativo'
+                                : `${impact.activeLoanCount} empréstimos ativos`
+                        setDeleteMessage(
+                            `Esta pessoa possui ${loanText} com saldo devedor total de ${impact.outstandingBalance.format()}. Tem certeza que deseja excluí-la? Todos os empréstimos e pagamentos associados serão removidos.`
+                        )
+                    } else {
+                        setDeleteMessage(`Tem certeza que deseja excluir ${person.name}? Essa ação é permanente.`)
+                    }
+                    setDeleteConfirmation(true)
+                } else if (result.reason === 'person_not_found') {
+                    setError(new Error('Pessoa não encontrada.'))
+                }
+            }
+        } catch {
+            setError(new Error('Erro ao verificar impacto de exclusão.'))
+        } finally {
+            setIsDeleting(false)
+        }
+    }
+
+    const handleConfirmDelete = async () => {
+        if (!person) return
+        try {
+            setIsDeleting(true)
+            setDeleteError(null)
+
+            const result = await deletePerson(database, { id: person.id, confirmDeletion: true })
+
+            if (result.success) {
+                setDeleteConfirmation(false)
+                router.back()
+            } else if (result.reason === 'person_not_found') {
+                setDeleteError('Pessoa não encontrada.')
+            }
+        } catch {
+            setDeleteError('Erro ao excluir pessoa. Tente novamente.')
+        } finally {
+            setIsDeleting(false)
+        }
+    }
 
     if (isLoading) {
         return (
@@ -111,10 +173,18 @@ export default function PersonDetailsRoute() {
                         </Text>
                     </View>
                     <TouchableOpacity
+                        onPress={handleRequestDelete}
+                        disabled={isDeleting}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                        <MaterialIcons name="delete" size={24} color={theme.colors.error} />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
                         onPress={() => setShowEditModal(true)}
                         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
-                        <MaterialIcons name="edit" size={24} color={theme.colors.textSecondary} />
+                        <MaterialIcons name="edit" size={24} color={theme.colors.primary} />
                     </TouchableOpacity>
                 </View>
 
@@ -186,6 +256,22 @@ export default function PersonDetailsRoute() {
                     onSuccess={fetchPersonDetails}
                 />
             )}
+
+            <ConfirmModal
+                visible={deleteConfirmation}
+                onClose={() => {
+                    setDeleteConfirmation(false)
+                    setDeleteError(null)
+                }}
+                onConfirm={handleConfirmDelete}
+                title="Confirmar Exclusão"
+                message={deleteMessage}
+                error={deleteError}
+                confirmText="Excluir"
+                cancelText="Cancelar"
+                isSubmitting={isDeleting}
+                isDanger
+            />
 
         </View>
     )
