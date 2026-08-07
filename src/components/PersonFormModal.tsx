@@ -1,6 +1,5 @@
 import * as React from 'react'
-import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
-import MaterialIcons from '@expo/vector-icons/MaterialIcons'
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { useSQLiteContext } from 'expo-sqlite'
 
 import {
@@ -10,6 +9,7 @@ import {
     type PersonListItem,
 } from '../features/people/people'
 import { theme } from '../theme'
+import { BaseModal } from './BaseModal'
 
 export interface PersonFormModalProps {
     showForm: boolean
@@ -93,120 +93,76 @@ export function PersonFormModal({
     }
 
     return (
-        <Modal
+        <BaseModal
             visible={showForm}
-            animationType="fade"
-            transparent={true}
-            onRequestClose={() => {
-                setShowForm(false)
-            }}
+            onClose={() => setShowForm(false)}
+            title={isEditing ? 'Editar Pessoa' : 'Nova Pessoa'}
         >
-            <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                    <View style={styles.modalHeader}>
-                        <Text style={theme.typography.title}>
-                            {isEditing ? 'Editar Pessoa' : 'Nova Pessoa'}
-                        </Text>
-                        <TouchableOpacity
-                            onPress={() => {
-                                setShowForm(false)
-                            }}
-                        >
-                            <MaterialIcons name="close" size={24} color={theme.colors.textSecondary} />
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={{ gap: theme.spacing.md }}>
-                        <View style={{ gap: theme.spacing.xs }}>
-                            <Text style={styles.inputLabel}>Nome *</Text>
-                            <TextInput
-                                value={name}
-                                onChangeText={setName}
-                                placeholder="Ex: João Silva"
-                                placeholderTextColor={theme.colors.textSecondary}
-                                style={styles.input}
-                            />
-                        </View>
-
-                        <View style={{ gap: theme.spacing.xs }}>
-                            <Text style={styles.inputLabel}>Telefone</Text>
-                            <TextInput
-                                value={phone}
-                                onChangeText={setPhone}
-                                placeholder="Ex: (11) 98765-4321"
-                                placeholderTextColor={theme.colors.textSecondary}
-                                keyboardType="phone-pad"
-                                style={styles.input}
-                            />
-                        </View>
-
-                        <View style={{ gap: theme.spacing.xs }}>
-                            <Text style={styles.inputLabel}>Observação</Text>
-                            <TextInput
-                                value={note}
-                                onChangeText={setNote}
-                                placeholder="Ex: Amigo da faculdade"
-                                placeholderTextColor={theme.colors.textSecondary}
-                                multiline
-                                numberOfLines={2}
-                                style={[styles.input, styles.textAreaInput]}
-                            />
-                        </View>
-
-                        {formError && (
-                            <Text style={{ ...theme.typography.caption, color: theme.colors.error }}>
-                                {formError}
-                            </Text>
-                        )}
-
-                        <TouchableOpacity
-                            style={[
-                                styles.submitButton,
-                                isSubmitting && { opacity: 0.7 },
-                            ]}
-                            onPress={handleSubmit}
-                            disabled={isSubmitting}
-                        >
-                            <Text style={styles.submitButtonText}>
-                                {isSubmitting
-                                    ? 'Salvando...'
-                                    : isEditing
-                                    ? 'Salvar Alterações'
-                                    : 'Cadastrar'}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
+            <View style={{ gap: theme.spacing.md }}>
+                <View style={{ gap: theme.spacing.xs }}>
+                    <Text style={styles.inputLabel}>Nome *</Text>
+                    <TextInput
+                        value={name}
+                        onChangeText={setName}
+                        placeholder="Ex: João Silva"
+                        placeholderTextColor={theme.colors.textSecondary}
+                        style={styles.input}
+                    />
                 </View>
+
+                <View style={{ gap: theme.spacing.xs }}>
+                    <Text style={styles.inputLabel}>Telefone</Text>
+                    <TextInput
+                        value={phone}
+                        onChangeText={setPhone}
+                        placeholder="Ex: (11) 98765-4321"
+                        placeholderTextColor={theme.colors.textSecondary}
+                        keyboardType="phone-pad"
+                        style={styles.input}
+                    />
+                </View>
+
+                <View style={{ gap: theme.spacing.xs }}>
+                    <Text style={styles.inputLabel}>Observação</Text>
+                    <TextInput
+                        value={note}
+                        onChangeText={setNote}
+                        placeholder="Ex: Amigo da faculdade"
+                        placeholderTextColor={theme.colors.textSecondary}
+                        multiline
+                        numberOfLines={2}
+                        style={[styles.input, styles.textAreaInput]}
+                    />
+                </View>
+
+                {formError && (
+                    <Text style={{ ...theme.typography.caption, color: theme.colors.error }}>
+                        {formError}
+                    </Text>
+                )}
+
+                <TouchableOpacity
+                    style={[
+                        styles.submitButton,
+                        isSubmitting && { opacity: 0.7 },
+                    ]}
+                    onPress={handleSubmit}
+                    disabled={isSubmitting}
+                >
+                    <Text style={styles.submitButtonText}>
+                        {isSubmitting
+                            ? 'Salvando...'
+                            : isEditing
+                            ? 'Salvar Alterações'
+                            : 'Cadastrar'}
+                    </Text>
+                </TouchableOpacity>
             </View>
-        </Modal>
+        </BaseModal>
     )
 }
 
 const styles = StyleSheet.create({
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: theme.colors.overlay,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: theme.spacing.md,
-    },
-    modalContent: {
-        backgroundColor: theme.colors.surface,
-        borderRadius: theme.radii.card,
-        padding: theme.spacing.lg,
-        width: '100%',
-        maxWidth: 400,
-        ...theme.shadows.card,
-    },
-    modalHeader: {
-        borderBottomWidth: 1,
-        borderBottomColor: theme.colors.divider,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingBottom: theme.spacing.sm,
-        marginBottom: theme.spacing.md,
-    },
     inputLabel: {
         ...theme.typography.caption,
         color: theme.colors.text,
@@ -239,3 +195,4 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
 })
+
