@@ -69,4 +69,26 @@ export const getInitials = (name: string): string => {
   if (words.length === 0) return ''
   if (words.length === 1) return words[0][0].toUpperCase()
   return (words[0][0] + words[words.length - 1][0]).toUpperCase()
-}
+}
+
+export const parseBrlToCents = (value: string): number | null => {
+  if (!value) return null
+  let cleaned = value.replace(/[^\d.,]/g, '').trim()
+  if (!cleaned) return null
+
+  if (cleaned.includes(',') && cleaned.includes('.')) {
+    cleaned = cleaned.replace(/\./g, '').replace(',', '.')
+  } else if (cleaned.includes(',')) {
+    cleaned = cleaned.replace(',', '.')
+  }
+
+  const num = Number(cleaned)
+  if (isNaN(num) || num <= 0) return null
+
+  return Math.round(num * 100)
+}
+
+export const formatCentsToBrlInput = (cents: number): string => {
+  if (!Number.isInteger(cents) || cents <= 0) return ''
+  return (cents / 100).toFixed(2).replace('.', ',')
+}
