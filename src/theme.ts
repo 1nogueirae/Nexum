@@ -11,6 +11,7 @@ const colors = {
   success: '#3E8E5A',
   error: '#B3261E',
   divider: '#E3E3E0',
+  overlay: 'rgba(0, 0, 0, 0.5)',
 } as const
 
 const spacing = {

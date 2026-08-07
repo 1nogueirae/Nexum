@@ -3,25 +3,25 @@ import { useCallback } from 'react'
 import { useFocusEffect, useRouter } from 'expo-router'
 
 import { useSQLiteContext } from 'expo-sqlite'
-import { listPeople, type PersonListItem } from '../../features/people/people'
+import {
+    listPeople,
+    type Person,
+    type PersonListItem,
+} from '../../features/people/people'
 
-import { StyleSheet, Text, View, FlatList, Pressable, TouchableOpacity, TextInput } from 'react-native'
-import { StyleSheet, Text, View, FlatList, Pressable, TouchableOpacity, TextInput } from 'react-native'
+import { StyleSheet, Text, View, FlatList, Pressable, TouchableOpacity } from 'react-native'
 
 import { PersonCard } from '../../components/PersonCard'
-
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { PersonFormModal } from '../../components/PersonFormModal'
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import { theme } from '../../theme'
 
 function FloatingAddButton({
-    showForm,
-    setShowForm,
+    onPress,
 }: {
-    showForm: boolean
-    setShowForm: React.Dispatch<React.SetStateAction<boolean>>
+    onPress: () => void
 }) {
     return (
         <View
@@ -36,77 +36,12 @@ function FloatingAddButton({
 
             }}
         >
-            <TouchableOpacity
-                onPress={() => {
-                    setShowForm(!showForm)
-                }}
-            >
+            <TouchableOpacity onPress={onPress}>
                 <MaterialIcons name="add" size={42} color={theme.colors.surface} />
             </TouchableOpacity>
         </View>
     )
 }
-
-function FormModal({
-    showForm,
-    setShowForm,
-}: {
-    showForm: boolean
-    setShowForm: React.Dispatch<React.SetStateAction<boolean>>
-}) {
-
-    return (
-        <Pressable
-            style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                justifyContent: 'center',
-                alignItems: 'center',
-            }}
-            onPress={() => setShowForm(false)}
-        >
-            <View
-                style={{
-                    backgroundColor: theme.colors.surface,
-                    width: '90%',
-                    padding: theme.spacing.md,
-                    borderRadius: theme.radii.card,
-                    minHeight: 400,
-                }}>
-
-                <View style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.divider, flexDirection: 'row' }}>
-                    <Text style={{
-                        ...theme.typography.title,
-                        textAlign: 'center',
-                        marginBottom: theme.spacing.md,
-                    }}>
-                        Formulário de Pessoa
-                    </Text>
-                    <Text>X</Text>
-                </View>
-
-                <View style={{ gap: theme.spacing.md, marginTop: theme.spacing.md }}>
-                    <TextInput
-                        placeholder="Nome"
-                    />
-                    <TextInput
-                        placeholder="Email"
-                    />
-                    <TextInput
-                        placeholder="Telefone"
-                    />
-                </View>
-
-            </View>
-
-        </Pressable>
-    )
-}
-
 
 export default function PeopleRoute() {
 
@@ -118,12 +53,28 @@ export default function PeopleRoute() {
     const [error, setError] = React.useState<Error | null>(null)
 
     const [showForm, setShowForm] = React.useState(false)
+    const [editingPerson, setEditingPerson] = React.useState<PersonListItem | Person | null>(null)
+
+    const fetchPeople = useCallback(async () => {
+        try {
+            setIsLoading(true)
+            setError(null)
+
+            const peopleList = await listPeople(database)
+
+            setPeople(peopleList)
+        } catch (err) {
+            setError(err as Error)
+        } finally {
+            setIsLoading(false)
+        }
+    }, [database])
 
     useFocusEffect(
         useCallback(() => {
             let isActive = true
 
-            const fetchPeople = async () => {
+            const loadData = async () => {
                 try {
                     setIsLoading(true)
                     setError(null)
@@ -137,7 +88,7 @@ export default function PeopleRoute() {
                     if (isActive) setIsLoading(false)
                 }
             }
-            fetchPeople()
+            loadData()
             return () => {
                 isActive = false
             }
@@ -162,16 +113,23 @@ export default function PeopleRoute() {
         )
     }
 
+    const handleOpenAddModal = () => {
+        setEditingPerson(null)
+        setShowForm(true)
+    }
+
     return (
-        <View style={[styles.container]}>
-            <View style={{ gap: theme.spacing.sm }}>
+        <View style={styles.container}>
+            <View style={styles.content}>
                 {people.length === 0 ? (
                     <Text style={{ ...theme.typography.body, textAlign: 'center', marginTop: theme.spacing.md }}>
                         Nenhuma pessoa cadastrada. Clique no botão abaixo para adicionar uma nova pessoa.
                     </Text>
                 ) : (
                     <>
-                        <Text style={theme.typography.caption}>{people.length} pessoas</Text>
+                        <Text style={styles.peopleCountText}>
+                            {people.length} {people.length === 1 ? 'pessoa' : 'pessoas'}
+                        </Text>
                         <FlatList
                             style={styles.cardGroup}
                             data={people}
@@ -195,10 +153,15 @@ export default function PeopleRoute() {
                     </>
                 )}
             </View>
-            <FloatingAddButton showForm={showForm} setShowForm={setShowForm} />
+            <FloatingAddButton onPress={handleOpenAddModal} />
 
             {showForm && (
-                <FormModal showForm={showForm} setShowForm={setShowForm} />
+                <PersonFormModal
+                    showForm={showForm}
+                    setShowForm={setShowForm}
+                    editingPerson={editingPerson}
+                    onSuccess={fetchPeople}
+                />
             )}
         </View>
     )
@@ -215,10 +178,15 @@ const styles = StyleSheet.create({
         paddingTop: theme.spacing.md,
         gap: theme.spacing.sm,
     },
+    peopleCountText: {
+        ...theme.typography.caption,
+        textAlign: 'center',
+    },
     cardGroup: {
         flexGrow: 0,
         backgroundColor: theme.colors.surface,
         borderRadius: theme.radii.cardGroup,
         overflow: 'hidden',
-    }
+    },
 })
+

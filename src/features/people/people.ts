@@ -2,6 +2,7 @@ import * as Crypto from 'expo-crypto'
 import type { SQLiteDatabase } from 'expo-sqlite'
 
 import type { Money } from '../../money'
+import { formatName } from '../../utils'
 import {
   deletePersonRow,
   findPersonById,
@@ -92,7 +93,7 @@ export async function createPerson(
   database: SQLiteDatabase,
   input: CreatePersonInput,
 ): Promise<CreatePersonResult> {
-  const name = input.name.trim()
+  const name = formatName(input.name)
 
   if (!name) {
     return { success: false, reason: 'name_required' }
@@ -127,7 +128,7 @@ export async function updatePerson(
     return { success: false, reason: 'person_not_found' }
   }
 
-  const name = input.name.trim()
+  const name = formatName(input.name)
 
   if (!name) {
     return { success: false, reason: 'name_required' }
