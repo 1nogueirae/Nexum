@@ -1,15 +1,24 @@
 import * as Crypto from 'expo-crypto'
 import type { SQLiteDatabase } from 'expo-sqlite'
 
-import type { Money } from '../../money'
+import { Money } from '../../money'
 import { findPersonById } from '../people/people-database'
+import {
+  calculateLoanSummary,
+  calculateOutstandingBalance,
+  deriveLoanStatus,
+  type LoanSummary,
+} from './loans-calculations'
 import {
   deleteLoanRow,
   findLoanById,
   getLoanPaymentCount,
+  getLoanTotalPayments,
   insertLoanRow,
   listLoanRows,
   listLoanRowsByPerson,
+  syncLoanStatusInTransaction,
+  syncLoanStatusRow,
   updateLoanRow,
 } from './loans-database'
 
@@ -67,6 +76,13 @@ export interface DeleteLoanInput {
 export type DeleteLoanResult =
   | { success: true; loan: Loan }
   | { success: false; reason: 'loan_not_found' }
+
+export {
+  calculateLoanSummary,
+  calculateOutstandingBalance,
+  deriveLoanStatus,
+  type LoanSummary,
+}
 
 export async function findLoan(
   database: SQLiteDatabase,
@@ -213,4 +229,28 @@ export async function deleteLoan(
   }
 
   return { success: true, loan }
+}
+
+export async function getLoanSummary(
+  database: SQLiteDatabase,
+  loanId: string,
+): Promise<LoanSummary | null> {
+  const loan = await findLoanById(database, loanId)
+  if (!loan) {
+    return null
+  }
+
+  const totalPaidInCents = await getLoanTotalPayments(database, loanId)
+  return calculateLoanSummary(loan.amountInCents, totalPaidInCents)
+}
+
+export async function recalculateLoanStatus(
+  database: SQLiteDatabase,
+  loanId: string,
+) {
+  return syncLoanStatusRow(database, loanId)
+}
+
+export async function recalculateLoanStatusInTransaction(loanId: string) {
+  return syncLoanStatusInTransaction(loanId)
 }

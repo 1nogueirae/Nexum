@@ -1,7 +1,12 @@
 import type { SQLiteDatabase } from 'expo-sqlite'
 
+import { withExclusiveDatabaseTransactionAsync } from '../../database/connection'
 import { TABLE_NAMES, type LoanRow } from '../../database/schema'
 import { Money } from '../../money'
+import {
+  calculateOutstandingBalance,
+  deriveLoanStatus,
+} from './loans-calculations'
 import type { Loan, LoanListItem, LoanStatus } from './loans'
 
 type LoanListRow = LoanRow & {
@@ -171,4 +176,61 @@ export async function getLoanPaymentCount(
   )
 
   return row?.count ?? 0
+}
+
+export async function getLoanTotalPayments(
+  database: SQLiteDatabase,
+  loanId: string,
+): Promise<number> {
+  const row = await database.getFirstAsync<{ total_paid: number }>(
+    `SELECT COALESCE(SUM(amount_in_cents), 0) AS total_paid FROM ${TABLE_NAMES.payments} WHERE loan_id = ?`,
+    [loanId],
+  )
+
+  return row?.total_paid ?? 0
+}
+
+export async function syncLoanStatusRow(
+  database: SQLiteDatabase,
+  loanId: string,
+): Promise<{
+  outstandingBalanceInCents: number
+  totalPaidInCents: number
+  status: LoanStatus
+}> {
+  const loanRow = await database.getFirstAsync<{ amount_in_cents: number }>(
+    `SELECT amount_in_cents FROM ${TABLE_NAMES.loans} WHERE id = ?`,
+    [loanId],
+  )
+
+  if (!loanRow) {
+    throw new Error(`Loan with id ${loanId} not found`)
+  }
+
+  const totalPaidInCents = await getLoanTotalPayments(database, loanId)
+  const outstandingBalanceInCents = calculateOutstandingBalance(
+    loanRow.amount_in_cents,
+    totalPaidInCents,
+  )
+  const status = deriveLoanStatus(loanRow.amount_in_cents, totalPaidInCents)
+
+  const updatedAt = new Date().toISOString()
+  await database.runAsync(
+    `UPDATE ${TABLE_NAMES.loans} SET status = ?, updated_at = ? WHERE id = ?`,
+    [status, updatedAt, loanId],
+  )
+
+  return { outstandingBalanceInCents, totalPaidInCents, status }
+}
+
+export async function syncLoanStatusInTransaction(
+  loanId: string,
+): Promise<{
+  outstandingBalanceInCents: number
+  totalPaidInCents: number
+  status: LoanStatus
+}> {
+  return withExclusiveDatabaseTransactionAsync(async (tx) => {
+    return syncLoanStatusRow(tx, loanId)
+  })
 }
